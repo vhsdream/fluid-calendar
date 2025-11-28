@@ -55,7 +55,7 @@ const defaultSettings: Settings & { accounts: ConnectedAccount[] } = {
     },
     eventDefaults: {
       defaultDuration: 60,
-      defaultColor: "#3b82f6",
+      defaultColor: "#b48ead",
       defaultReminder: 30,
     },
     refreshInterval: 5,
