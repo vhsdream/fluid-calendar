@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
           data: {
             id: "default",
             logLevel: "none",
-            disableHomepage: false,
           },
         });
       }
@@ -73,15 +72,6 @@ export async function PATCH(request: NextRequest) {
         });
       }
     });
-
-    // Log if the homepage setting was updated
-    if ("disableHomepage" in updates) {
-      logger.debug(
-        `Homepage setting updated: ${updates.disableHomepage}`,
-        { disableHomepage: updates.disableHomepage },
-        LOG_SOURCE
-      );
-    }
 
     return NextResponse.json(settings);
   } catch (error) {

@@ -111,7 +111,6 @@ const defaultSettings: Settings & { accounts: ConnectedAccount[] } = {
     logLevel: "none",
     logRetention: undefined,
     logDestination: "db",
-    disableHomepage: false,
   },
   accounts: [],
 };
@@ -467,7 +466,6 @@ export const useSettingsStore = create<SettingsStore>()(
             logLevel: systemSettings.logLevel as "none" | "debug",
             logRetention: systemSettings.logRetention,
             logDestination: systemSettings.logDestination,
-            disableHomepage: systemSettings.disableHomepage,
           });
         } catch (error) {
           logger.error(
