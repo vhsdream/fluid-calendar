@@ -39,38 +39,6 @@ const staticFileExtensions = [
 ];
 
 /**
- * Get the homepage setting directly from the API
- * This ensures we always have the most up-to-date setting
- */
-async function getHomepageSetting(request: NextRequest): Promise<boolean> {
-  try {
-    // Create a fetch request to our own API endpoint
-    const apiUrl = new URL("/api/settings/homepage-disabled", request.url);
-    // Add a timestamp to prevent browser/CDN caching
-    apiUrl.searchParams.set("t", Date.now().toString());
-
-    const response = await fetch(apiUrl.toString(), {
-      headers: {
-        "Content-Type": "application/json",
-        "X-Internal-Request": "true",
-      },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      throw new Error(`API responded with ${response.status}`);
-    }
-
-    const data = await response.json();
-    return !!data.disabled;
-  } catch (error) {
-    // If API call fails, default to false (show homepage)
-    console.error("Error fetching homepage setting:", error);
-    return false;
-  }
-}
-
-/**
  * Middleware for handling authentication and authorization
  */
 export async function middleware(request: NextRequest) {
@@ -115,26 +83,18 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Get the homepage setting directly from the API
-    const disableHomepage = await getHomepageSetting(request);
-
     // If the homepage is disabled, check authentication and redirect accordingly
-    if (disableHomepage) {
-      const token = await getToken({
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET,
-      });
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
 
-      // Redirect authenticated users to /calendar, unauthenticated to /auth/signin
-      if (token) {
-        return NextResponse.redirect(new URL("/calendar", request.url));
-      } else {
-        return NextResponse.redirect(new URL("/auth/signin", request.url));
-      }
+    // Redirect authenticated users to /calendar, unauthenticated to /auth/signin
+    if (token) {
+      return NextResponse.redirect(new URL("/calendar", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/auth/signin", request.url));
     }
-
-    // If homepage is not disabled, continue normally
-    return NextResponse.next();
   }
 
   // Check if the route is public

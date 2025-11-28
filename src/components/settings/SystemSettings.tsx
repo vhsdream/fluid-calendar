@@ -4,13 +4,13 @@ import AccessDeniedMessage from "@/components/auth/AccessDeniedMessage";
 import AdminOnly from "@/components/auth/AdminOnly";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
 
 import { clearResendInstance } from "@/lib/email/resend";
 import { logger } from "@/lib/logger";
@@ -41,7 +41,6 @@ export function SystemSettings() {
           outlookClientSecret: data.outlookClientSecret,
           outlookTenantId: data.outlookTenantId,
           logLevel: data.logLevel,
-          disableHomepage: data.disableHomepage,
           resendApiKey: data.resendApiKey,
         });
       })
@@ -226,30 +225,6 @@ export function SystemSettings() {
                 Leave empty to allow any Microsoft account (recommended)
               </p>
             </div>
-          </div>
-        </SettingRow>
-
-        <SettingRow label="Homepage" description="Configure homepage behavior">
-          <div className="space-y-2">
-            <Label>Disable Homepage</Label>
-            <Select
-              value={system.disableHomepage ? "true" : "false"}
-              onValueChange={(value) =>
-                handleUpdate({ disableHomepage: value === "true" })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="false">Show Homepage</SelectItem>
-                <SelectItem value="true">Redirect to Login/Calendar</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-sm text-muted-foreground">
-              When enabled, the homepage (/) will redirect to the login page for
-              unauthenticated users or to the calendar for authenticated users.
-            </p>
           </div>
         </SettingRow>
 
