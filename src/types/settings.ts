@@ -90,7 +90,6 @@ export interface SystemSettings {
   logLevel: "none" | "debug";
   logRetention?: LogRetention; // Retention periods per log level
   logDestination?: string; // "db", "file", or "both"
-  disableHomepage?: boolean; // Whether to disable the homepage and redirect to login/calendar
   publicSignup?: boolean; // Whether public signup is enabled
   resendApiKey?: string; // API key for Resend email service
 }

@@ -334,7 +334,7 @@ model CalendarSettings {
   workingHoursEnd     String   @default("17:00") // HH:mm format
   workingHoursDays    String   @default("[1,2,3,4,5]") // JSON string of numbers 0-6
   defaultDuration     Int      @default(60) // minutes
-  defaultColor        String   @default("#3b82f6")
+  defaultColor        String   @default("#b48ead")
   defaultReminder     Int      @default(30) // minutes
   refreshInterval     Int      @default(5) // minutes
   createdAt           DateTime @default(now())
@@ -400,7 +400,6 @@ model SystemSettings {
   logRetention        Json? // Retention periods per log level
   logDestination      String   @default("db") // db, file, both
   publicSignup        Boolean  @default(false) // Whether public signup is enabled
-  disableHomepage     Boolean  @default(false) // Whether to disable the homepage and redirect to login/calendar
   resendApiKey        String? // API key for Resend email service
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt

@@ -55,7 +55,7 @@ const defaultSettings: Settings & { accounts: ConnectedAccount[] } = {
     },
     eventDefaults: {
       defaultDuration: 60,
-      defaultColor: "#3b82f6",
+      defaultColor: "#b48ead",
       defaultReminder: 30,
     },
     refreshInterval: 5,
@@ -111,7 +111,6 @@ const defaultSettings: Settings & { accounts: ConnectedAccount[] } = {
     logLevel: "none",
     logRetention: undefined,
     logDestination: "db",
-    disableHomepage: false,
   },
   accounts: [],
 };
@@ -467,7 +466,6 @@ export const useSettingsStore = create<SettingsStore>()(
             logLevel: systemSettings.logLevel as "none" | "debug",
             logRetention: systemSettings.logRetention,
             logDestination: systemSettings.logDestination,
-            disableHomepage: systemSettings.disableHomepage,
           });
         } catch (error) {
           logger.error(
