@@ -35,6 +35,7 @@ export const useEventModalStore = create<EventModalStore>((set) => ({
 export function useCalendarCommands(): Command[] {
   const { date: currentDate, setDate } = useViewStore();
   const { isSidebarOpen, setSidebarOpen } = useCalendarUIStore();
+  const { setView } = useViewStore();
 
   const calendarContext = {
     requiredPath: "/calendar",
@@ -103,6 +104,33 @@ export function useCalendarCommands(): Command[] {
         useEventModalStore.getState().setOpen(true);
       },
       shortcut: "ne",
+      context: calendarContext,
+    },
+    {
+      id: "calendar.day-view",
+      title: "Switch to day view",
+      keywords: ["calendar", "view", "day"],
+      section: "calendar",
+      perform: () => setView("day"),
+      shortcut: "d",
+      context: calendarContext,
+    },
+    {
+      id: "calendar.week-view",
+      title: "Switch to week view",
+      keywords: ["calendar", "view", "week"],
+      section: "calendar",
+      perform: () => setView("week"),
+      shortcut: "w",
+      context: calendarContext,
+    },
+    {
+      id: "calendar.month-view",
+      title: "Switch to month view",
+      keywords: ["calendar", "view", "month"],
+      section: "calendar",
+      perform: () => setView("month"),
+      shortcut: "m",
       context: calendarContext,
     },
   ];
