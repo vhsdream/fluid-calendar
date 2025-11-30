@@ -142,5 +142,14 @@ export function useCalendarCommands(): Command[] {
       shortcut: "y",
       context: calendarContext,
     },
+    {
+      id: "calendar.agenda-view",
+      title: "Switch to Agenda View",
+      keywords: ["calendar", "view", "agenda"],
+      section: "calendar",
+      perform: () => setView("agenda"),
+      shortcut: "a",
+      context: calendarContext,
+    },
   ];
 }

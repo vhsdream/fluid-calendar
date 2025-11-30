@@ -11,6 +11,7 @@ import { FeedManager } from "@/components/calendar/FeedManager";
 import { MonthView } from "@/components/calendar/MonthView";
 import { MultiMonthView } from "@/components/calendar/MultiMonthView";
 import { WeekView } from "@/components/calendar/WeekView";
+import { ListView } from "@/components/calendar/ListView";
 
 import { addDays, formatDate, newDate, subDays } from "@/lib/date-utils";
 import { isSaasEnabled } from "@/lib/config";
@@ -211,7 +212,18 @@ export function Calendar({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              Year
+              3 Months
+            </button>
+            <button
+              onClick={() => setView("agenda")}
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-sm font-medium",
+                view === "agenda"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              Schedule
             </button>
           </div>
         </header>
@@ -224,8 +236,10 @@ export function Calendar({
             <WeekView currentDate={currentDate} onDateClick={setDate} />
           ) : view === "month" ? (
             <MonthView currentDate={currentDate} onDateClick={setDate} />
-          ) : (
+          ) : view === "multiMonth" ? (
             <MultiMonthView currentDate={currentDate} onDateClick={setDate} />
+          ) : (
+            <ListView currentDate={currentDate} onDateClick={setDate} />
           )}
         </div>
       </main>
