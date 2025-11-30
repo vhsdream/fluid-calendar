@@ -135,7 +135,7 @@ export function useCalendarCommands(): Command[] {
     },
     {
       id: "calendar.year-view",
-      title: "Switch to Yearly View",
+      title: "Switch to 3-Month View",
       keywords: ["calendar", "view", "year"],
       section: "calendar",
       perform: () => setView("multiMonth"),

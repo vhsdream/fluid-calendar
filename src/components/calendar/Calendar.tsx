@@ -223,7 +223,7 @@ export function Calendar({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              Schedule
+              Agenda
             </button>
           </div>
         </header>
