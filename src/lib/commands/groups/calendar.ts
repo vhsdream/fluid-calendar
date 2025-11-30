@@ -108,7 +108,7 @@ export function useCalendarCommands(): Command[] {
     },
     {
       id: "calendar.day-view",
-      title: "Switch to day view",
+      title: "Switch to Day View",
       keywords: ["calendar", "view", "day"],
       section: "calendar",
       perform: () => setView("day"),
@@ -117,7 +117,7 @@ export function useCalendarCommands(): Command[] {
     },
     {
       id: "calendar.week-view",
-      title: "Switch to week view",
+      title: "Switch to Week View",
       keywords: ["calendar", "view", "week"],
       section: "calendar",
       perform: () => setView("week"),
@@ -126,11 +126,20 @@ export function useCalendarCommands(): Command[] {
     },
     {
       id: "calendar.month-view",
-      title: "Switch to month view",
+      title: "Switch to Month View",
       keywords: ["calendar", "view", "month"],
       section: "calendar",
       perform: () => setView("month"),
       shortcut: "m",
+      context: calendarContext,
+    },
+    {
+      id: "calendar.year-view",
+      title: "Switch to Yearly View",
+      keywords: ["calendar", "view", "year"],
+      section: "calendar",
+      perform: () => setView("multiMonth"),
+      shortcut: "y",
       context: calendarContext,
     },
   ];
