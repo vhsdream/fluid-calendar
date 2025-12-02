@@ -212,7 +212,7 @@ export function Calendar({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              3 Months
+              Quarterly
             </button>
             <button
               onClick={() => setView("agenda")}

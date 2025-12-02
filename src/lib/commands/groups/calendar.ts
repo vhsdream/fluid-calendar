@@ -134,12 +134,12 @@ export function useCalendarCommands(): Command[] {
       context: calendarContext,
     },
     {
-      id: "calendar.year-view",
-      title: "Switch to 3-Month View",
-      keywords: ["calendar", "view", "year"],
+      id: "calendar.quarterly-view",
+      title: "Switch to Quarterly View",
+      keywords: ["calendar", "view", "quarterly"],
       section: "calendar",
       perform: () => setView("multiMonth"),
-      shortcut: "y",
+      shortcut: "q",
       context: calendarContext,
     },
     {
