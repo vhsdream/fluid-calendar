@@ -48,7 +48,7 @@ export function WebCalForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [formData, setFormData] = useState({
-    serverUrl: "",
+    webcalUrl: "",
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<TestResult | null>(null);
@@ -72,7 +72,7 @@ export function WebCalForm({
 
   const handleTest = async () => {
     // Validate form
-    if (!formData.serverUrl) {
+    if (!formData.webcalUrl) {
       setErrorMessage("Please fill in calendar URL");
       return;
     }
@@ -83,7 +83,7 @@ export function WebCalForm({
       setTestResults(null);
 
       // Ensure the server URL has the correct format
-      let serverUrl = formData.serverUrl;
+      let serverUrl = formData.webcalUrl;
       if (
         !serverUrl.startsWith("http://") &&
         !serverUrl.startsWith("https://")
@@ -141,7 +141,7 @@ export function WebCalForm({
     setErrorMessage(null);
 
     // Validate form
-    if (!formData.serverUrl) {
+    if (!formData.webcalUrl) {
       setErrorMessage("Please fill in Web calendar URL");
       return;
     }
@@ -150,12 +150,12 @@ export function WebCalForm({
       setIsSubmitting(true);
 
       // Ensure the server URL has the correct format
-      let serverUrl = formData.serverUrl;
+      let webcalUrl = formData.webcalUrl;
       if (
-        !serverUrl.startsWith("http://") &&
-        !serverUrl.startsWith("https://")
+        !webcalUrl.startsWith("http://") &&
+        !webcalUrl.startsWith("https://")
       ) {
-        serverUrl = `https://${serverUrl}`;
+        webcalUrl = `https://${webcalUrl}`;
       }
 
       const response = await fetch("/api/calendar/caldav/auth", {
@@ -164,7 +164,7 @@ export function WebCalForm({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          serverUrl,
+          webcalUrl,
         }),
       });
 
@@ -293,7 +293,7 @@ export function WebCalForm({
               id="serverUrl"
               name="serverUrl"
               placeholder="https://example.com/holidays.ics"
-              value={formData.serverUrl}
+              value={formData.webcalUrl}
               onChange={handleChange}
               required
             />

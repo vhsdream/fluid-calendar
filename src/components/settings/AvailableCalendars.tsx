@@ -15,7 +15,7 @@ interface AvailableCalendar {
 
 interface Props {
   accountId: string;
-  provider: "GOOGLE" | "OUTLOOK" | "CALDAV";
+  provider: "GOOGLE" | "OUTLOOK" | "CALDAV" | "WEBCAL";
 }
 
 export function AvailableCalendars({ accountId, provider }: Props) {
