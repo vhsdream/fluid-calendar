@@ -74,13 +74,13 @@ export function formatAbsoluteUrl(baseUrl: string, path?: string): string {
 /**
  * Fetches ICS from a public server
  * @param webcalUrl the URL
- * @returns A promise that resolves to the ICS file
+ * @returns A promise that returns the full text of the ICS file
  */
 export async function fetchWebCalendar(webcalUrl: string) {
   try {
     // Fetch the ICS file
     const webcalResponse = await fetch(webcalUrl);
-    return webcalResponse.json();
+    return webcalResponse;
     // const icsText = await calendar.text();
     // const events = parseWebCal(icsText);
     // return events;

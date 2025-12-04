@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { formatISO } from "date-fns";
+import ICAL from "ical.js";
 
 import { authenticateRequest } from "@/lib/auth/api-auth";
 import { newDate } from "@/lib/date-utils";
@@ -45,8 +46,9 @@ export async function POST(request: NextRequest) {
     try {
       // Fetch WebCal using exported func from utils
       const webCal = await fetchWebCalendar(webcalUrl);
+      const webcalHeaders = webCal.headers;
 
-      if (!webCal.ok) {
+      if (!webcalHeaders.get("content-type")?.startsWith("text/calendar")) {
         logger.error(
           `WebCal not found at ${webcalUrl}`,
           { webcalUrl },
@@ -83,15 +85,16 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // Parse webcal for some info
+      const webCalText = await webCal.text();
+      const jcalData = ICAL.parse(webCalText);
+      const comp = new ICAL.Component(jcalData);
+
       // Add the webcal to the DB
-      let webcalColor = webCal.color || "#BF616A";
-      if (typeof webcalColor !== "string") {
-        webcalColor = "#BF616A";
-      }
-      let webcalName = webCal.displayName || "Unnamed WebCalendar";
-      if (typeof webcalName !== "string") {
-        webcalName = "Unnamed WebCalendar";
-      }
+      const webcalName =
+        comp.getFirstPropertyValue("x-wr-calname")?.toString() ||
+        "Unnamed Webcalendar";
+      const webcalColor = "#BF616A";
       const newWebCalendar = await prisma.calendarFeed.create({
         data: {
           name: webcalName,
@@ -101,7 +104,6 @@ export async function POST(request: NextRequest) {
           userId,
           enabled: true,
           lastSync: formatISO(new Date()),
-          syncToken: webCal.syncToken ? String(webCal.syncToken) : null,
         },
       });
 
