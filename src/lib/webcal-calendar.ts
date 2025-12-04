@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { convertVEventToCalendarEvent } from "./caldav-helpers";
 import {
   CalendarEventInput,
-  CalendarQueryParams, // ExtendedDAVClient,
+  CalendarQueryParams,
   SyncResult,
   WebCalCalendarObject,
   WebCalClient,
@@ -50,6 +50,7 @@ export class WebCalCalendarService {
       // Use type assertion to tell TypeScript this is our extended client type
       this.client = {
         url: this.feed.url,
+        id: this.feed.id,
       } as unknown as WebCalClient;
 
       return this.client;
@@ -156,7 +157,7 @@ export class WebCalCalendarService {
   private async getEvents(
     start: Date,
     end: Date,
-    webCalUrl: string
+    webcalUrl: string
   ): Promise<CalendarEvent[]> {
     try {
       const client = await this.getClient();
@@ -167,7 +168,7 @@ export class WebCalCalendarService {
         client,
         start,
         end,
-        webCalUrl
+        webcalUrl
       );
 
       const instanceEvents = await this.expandRecurringEvents(masterEvents);
@@ -180,7 +181,7 @@ export class WebCalCalendarService {
         {
           error: error instanceof Error ? error.message : "Unknown error",
           accountId: this.feed.accountId,
-          webCalUrl,
+          webcalUrl,
         },
         LOG_SOURCE
       );
@@ -212,11 +213,11 @@ export class WebCalCalendarService {
     client: WebCalClient,
     start: Date,
     end: Date,
-    webCalUrl: string
+    webcalUrl: string
   ): Promise<CalendarEvent[]> {
     // Create query parameters for master events
     const queryParams = this.createWebCalQueryParams(
-      webCalUrl,
+      webcalUrl,
       start,
       end,
       false // Don't use expand for master events
@@ -238,7 +239,7 @@ export class WebCalCalendarService {
    * @returns CalDAV query parameters
    */
   private createWebCalQueryParams(
-    webCalUrl: string,
+    webcalUrl: string,
     start: Date,
     end: Date,
     useExpand: boolean
@@ -257,7 +258,7 @@ export class WebCalCalendarService {
     };
 
     return {
-      url: webCalUrl,
+      url: webcalUrl,
       props,
       filters: {
         "comp-filter": {
@@ -288,13 +289,13 @@ export class WebCalCalendarService {
    * @returns Array of calendar events
    */
   private async processCalendarObjects(
-    calendarObjects: DAVResponse[]
+    calendarObjects: Response[]
   ): Promise<CalendarEvent[]> {
     const events: CalendarEvent[] = [];
     // Track UIDs to avoid duplicates
     const processedUids = new Set<string>();
 
-    // Convert DAVResponse objects to CalDAVCalendarObject format
+    // Convert Response objects to CalDAVCalendarObject format
     const calendarData = this.extractCalendarData(calendarObjects);
 
     for (const obj of calendarData) {
@@ -435,12 +436,12 @@ export class WebCalCalendarService {
 
   /**
    * Synchronizes a Web calendar with the local database
-   * @param webCalUrl Calendar URL
+   * @param webcalUrl Calendar URL
    * @returns Sync result with added, updated, and deleted events
    */
   async syncCalendar(
     id: string,
-    webCalUrl: string,
+    webcalUrl: string,
     userId: string
   ): Promise<SyncResult> {
     try {
@@ -448,14 +449,14 @@ export class WebCalCalendarService {
       const feed = await prisma.calendarFeed.findFirst({
         where: {
           id,
-          url: webCalUrl,
+          url: webcalUrl,
           type: "WEBCAL",
           userId,
         },
       });
 
       if (!feed) {
-        throw new Error(`Calendar feed not found for WebCal: ${webCalUrl}`);
+        throw new Error(`Calendar feed not found for WebCal: ${webcalUrl}`);
       }
       //delete all events from the database
       await prisma.calendarEvent.deleteMany({
@@ -474,7 +475,7 @@ export class WebCalCalendarService {
       const events = await this.getEvents(
         timeRange.start,
         timeRange.end,
-        webCalUrl
+        webcalUrl
       );
 
       // Process events and update database
@@ -496,7 +497,7 @@ export class WebCalCalendarService {
         "Failed to sync Webcal calendar",
         {
           error: error instanceof Error ? error.message : "Unknown error",
-          webCalUrl,
+          webcalUrl,
           accountId: this.feed.accountId,
         },
         LOG_SOURCE

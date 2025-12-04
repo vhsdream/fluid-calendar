@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
 
       logger.info(
         `Successfully added Webcal subscription: ${newWebCalendar.id}`,
-        { name: newWebCalendar.name, id: calendarId },
+        { name: newWebCalendar.name, id: newWebCalendar.id },
         LOG_SOURCE
       );
 
@@ -115,13 +115,32 @@ export async function POST(request: NextRequest) {
       try {
         logger.info(
           `Performing initial sync of Webcalendar: ${newWebCalendar.name}`,
-          { id: calendarId },
+          { id: newWebCalendar.id },
           LOG_SOURCE
         );
-        // const webcalService = new WebCalCalendarService(calendarId);
-        // await webcalService.syncCalendar(newWebCalendar.id, webcalUrl, userId);
 
-        // Update the last sync time
+        const feed = await prisma.calendarFeed.findFirst({
+          where: {
+            id: calendarId,
+            url: webcalUrl,
+            type: "WEBCAL",
+            userId,
+          },
+        });
+
+        if (!feed) {
+          throw new Error(`Calendar feed not found for WebCal: ${webcalUrl}`);
+        }
+
+        //delete all events from the database
+        await prisma.calendarEvent.deleteMany({
+          where: {
+            feedId: feed.id,
+          },
+        });
+
+        // Process events and update database
+        // const events = webCalText.events;
         await prisma.calendarFeed.update({
           where: { id: newWebCalendar.id, userId },
           data: {
@@ -131,7 +150,7 @@ export async function POST(request: NextRequest) {
 
         logger.info(
           `Initial sync completed for Web calendar: ${newWebCalendar.id}`,
-          { calendarId },
+          { id: newWebCalendar.id },
           LOG_SOURCE
         );
       } catch (syncError) {
