@@ -23,7 +23,7 @@ interface WebCalFormProps {
 
 /**
  * Form component for adding a new WebCal subscription
- * Collects server URL
+ * Collects webcal URL
  */
 export function AddWebCalForm({
   onSuccess,
@@ -60,13 +60,18 @@ export function AddWebCalForm({
     try {
       setIsSubmitting(true);
 
-      // Ensure the server URL has the correct format
+      // Ensure the webcal URL has the correct format
       let webcalUrl = formData.webcalUrl;
       if (
         !webcalUrl.startsWith("http://") &&
         !webcalUrl.startsWith("https://")
       ) {
         webcalUrl = `https://${webcalUrl}`;
+      }
+
+      // Remove trailing slash if present
+      if (webcalUrl.endsWith("/")) {
+        webcalUrl = webcalUrl.slice(0, -1);
       }
 
       const response = await fetch("/api/calendar/webcal/add", {
@@ -130,13 +135,13 @@ export function AddWebCalForm({
           <fieldset className="mb-4">
             <Label
               className="mb-2.5 text-[15px] leading-normal"
-              htmlFor="serverUrl"
+              htmlFor="webcalUrl"
             >
-              Server URL <span className="text-red-500">*</span>
+              Webcal URL <span className="text-red-500">*</span>
             </Label>
             <Input
-              id="serverUrl"
-              name="serverUrl"
+              id="webcalUrl"
+              name="webcalUrl"
               placeholder="https://example.com/holidays.ics"
               value={formData.webcalUrl}
               onChange={handleChange}
@@ -156,7 +161,7 @@ export function AddWebCalForm({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Connecting..." : "Connect"}
+            {isSubmitting ? "Connecting..." : "Subscribe"}
           </Button>
         </CardFooter>
       </form>
