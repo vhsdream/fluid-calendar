@@ -1,6 +1,6 @@
 import { CalendarEvent, CalendarFeed, Prisma } from "@prisma/client";
 import ICAL from "ical.js";
-import { DAVDepth, DAVResponse, createDAVClient } from "tsdav";
+import { DAVDepth, DAVResponse } from "tsdav";
 
 import { newDate, newDateFromYMD } from "@/lib/date-utils";
 import { logger } from "@/lib/logger";
@@ -10,24 +10,24 @@ import { prisma } from "@/lib/prisma";
 import { convertVEventToCalendarEvent } from "./caldav-helpers";
 import {
   CalendarEventInput,
-  CalendarQueryParams,
-  ExtendedDAVClient,
+  CalendarQueryParams, // ExtendedDAVClient,
   SyncResult,
   WebCalCalendarObject,
+  WebCalClient,
 } from "./webcal-interfaces";
 
 const LOG_SOURCE = "WebCalCalendar";
 
 /**
- * Service for interacting with CalDAV servers
+ * Service for interacting with Webcal data
  */
 export class WebCalCalendarService {
-  private client: ExtendedDAVClient | null = null;
+  private client: WebCalClient | null = null;
 
   /**
-   * Creates a new CalDAV calendar service
+   * Creates a new Webcal calendar service
    * @param prisma Prisma client instance
-   * @param account Connected account with CalDAV credentials
+   * @param feed The Webcal feed
    */
   constructor(private feed: CalendarFeed) {
     // Initialize client when needed
@@ -37,7 +37,7 @@ export class WebCalCalendarService {
    * Creates and initializes the CalDAV client
    * @returns Initialized DAVClient
    */
-  private async getClient(): Promise<ExtendedDAVClient> {
+  private async getClient(): Promise<WebCalClient> {
     if (this.client) {
       return this.client;
     }
@@ -48,19 +48,14 @@ export class WebCalCalendarService {
 
     try {
       // Use type assertion to tell TypeScript this is our extended client type
-      this.client = (await createDAVClient({
-        serverUrl: this.feed.url,
-        credentials: {
-          username: "",
-          password: "",
-        },
-        defaultAccountType: "caldav",
-      })) as unknown as ExtendedDAVClient;
+      this.client = {
+        url: this.feed.url,
+      } as unknown as WebCalClient;
 
       return this.client;
     } catch (error) {
       logger.error(
-        "Failed to create CalDAV client",
+        "Failed to create Webcal client",
         {
           error: error instanceof Error ? error.message : "Unknown error",
           accountId: this.feed.id,
@@ -214,7 +209,7 @@ export class WebCalCalendarService {
    * @returns Array of master events
    */
   private async fetchMasterEvents(
-    client: ExtendedDAVClient,
+    client: WebCalClient,
     start: Date,
     end: Date,
     webCalUrl: string

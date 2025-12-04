@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { formatISO } from "date-fns";
-import ICAL from "ical.js";
 
 import { authenticateRequest } from "@/lib/auth/api-auth";
 import { newDate } from "@/lib/date-utils";
@@ -9,7 +8,7 @@ import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 // import { WebCalCalendarService } from "@/lib/webcal-calendar";
-import { fetchWebCalendar } from "../utils";
+import { fetchWebCalendar, parseWebCal } from "../utils";
 
 const LOG_SOURCE = "WebCalAdd";
 
@@ -86,14 +85,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Parse webcal for some info
-      const webCalText = await webCal.text();
-      const jcalData = ICAL.parse(webCalText);
-      const comp = new ICAL.Component(jcalData);
+      const webCalText = parseWebCal(await webCal.text());
+      // const icsText = parseWebCal(webCalText);
+      // const jcalData = ICAL.parse(webCalText);
+      // const comp = new ICAL.Component(jcalData);
 
       // Add the webcal to the DB
-      const webcalName =
-        comp.getFirstPropertyValue("x-wr-calname")?.toString() ||
-        "Unnamed Webcalendar";
+      const webcalName = webCalText.webCalName;
       const webcalColor = "#BF616A";
       const newWebCalendar = await prisma.calendarFeed.create({
         data: {
@@ -109,7 +107,7 @@ export async function POST(request: NextRequest) {
 
       logger.info(
         `Successfully added Webcal subscription: ${newWebCalendar.id}`,
-        { name: newWebCalendar.name, calendarId },
+        { name: newWebCalendar.name, id: calendarId },
         LOG_SOURCE
       );
 
@@ -117,7 +115,7 @@ export async function POST(request: NextRequest) {
       try {
         logger.info(
           `Performing initial sync of Webcalendar: ${newWebCalendar.name}`,
-          { calendarId },
+          { id: calendarId },
           LOG_SOURCE
         );
         // const webcalService = new WebCalCalendarService(calendarId);

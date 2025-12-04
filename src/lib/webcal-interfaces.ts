@@ -42,8 +42,9 @@ export interface ExtendedDAVClient {
 
 // Futile attempt to create my own client?
 export interface WebCalClient {
-  fetchWebCalUrl: () => Promise<string>;
+  // fetchWebCalUrl: () => Promise<string>;
   fetchWebCalendar: () => Promise<WebCalCalendarObject[]>;
+  calendarQuery: (params: CalendarQueryParams) => Promise<DAVResponse[]>;
   createObject: (params: {
     url: string;
     data: string;

@@ -1,4 +1,5 @@
-// import ICAL from "ical.js";
+import ICAL from "ical.js";
+
 import { logger } from "@/lib/logger";
 
 const LOG_SOURCE = "WebcalUtils";
@@ -96,29 +97,37 @@ export async function fetchWebCalendar(webcalUrl: string) {
   }
 }
 
-// function parseWebCal(icsText: string) {
-//   // Parse the ICS text into a jCal object (ical.js format)
-//   const jcalData = ICAL.parse(icsText);
-//   const comp = new ICAL.Component(jcalData);
-//
-//   // Extract all VEVENT components (events)
-//   const events = comp.getAllSubcomponents("vevent").map((vevent) => {
-//     // Convert vevent to an ICAL.Event object for easier access
-//     const event = new ICAL.Event(vevent);
-//
-//     // Map ICS properties to FullCalendar event format
-//     return {
-//       id: event.uid, // Unique ID (from ICS UID)
-//       title: event.summary || "Untitled Event", // Event title
-//       color: event.color || "#5E81AC",
-//       start: event.startDate.toJSDate(), // Start time (convert to JS Date)
-//       end: event.endDate ? event.endDate.toJSDate() : null, // End time (optional)
-//       description: event.description || "", // Event description
-//       location: event.location || "", // Event location
-//       isRecurring: event.isRecurring,
-//       isRecurrenceException: event.isRecurrenceException,
-//       // Add more fields (e.g., url, color) as needed
-//     };
-//   });
-//   return events;
-// }
+export function parseWebCal(webCalText: string) {
+  // Parse the ICS text into a jCal object (ical.js format)
+  const jcalData = ICAL.parse(webCalText);
+  const comp = new ICAL.Component(jcalData);
+
+  // try a thing
+  const webCalName =
+    comp.getFirstPropertyValue("x-wr-calname")?.toString() ||
+    "Unnamed Webcalendar";
+
+  // Extract all VEVENT components (events)
+  const events = comp.getAllSubcomponents("vevent").map((vevent) => {
+    // Convert vevent to an ICAL.Event object for easier access
+    const event = new ICAL.Event(vevent);
+
+    // Map ICS properties to FullCalendar event format
+    return {
+      id: event.uid, // Unique ID (from ICS UID)
+      title: event.summary || "Untitled Event", // Event title
+      color: event.color || "#5E81AC",
+      start: event.startDate.toJSDate(), // Start time (convert to JS Date)
+      end: event.endDate ? event.endDate.toJSDate() : null, // End time (optional)
+      description: event.description || "", // Event description
+      location: event.location || "", // Event location
+      isRecurring: event.isRecurring,
+      isRecurrenceException: event.isRecurrenceException,
+      // Add more fields (e.g., url, color) as needed
+    };
+  });
+  return {
+    webCalName,
+    events,
+  };
+}
