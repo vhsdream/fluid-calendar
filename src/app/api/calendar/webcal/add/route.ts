@@ -1,0 +1,194 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { formatISO } from "date-fns";
+
+import { authenticateRequest } from "@/lib/auth/api-auth";
+import { newDate } from "@/lib/date-utils";
+import { logger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
+
+// import { WebCalCalendarService } from "@/lib/webcal-calendar";
+import { fetchWebCalendar } from "../utils";
+
+const LOG_SOURCE = "WebCalAdd";
+
+/**
+ * API route for adding a new WebCal
+ * POST /api/calendar/webcal/add
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const auth = await authenticateRequest(request, LOG_SOURCE);
+    if ("response" in auth) {
+      return auth.response;
+    }
+
+    const userId = auth.userId;
+
+    const json = await request.json();
+    const { webcalUrl, calendarId } = json;
+
+    if (!webcalUrl) {
+      logger.error(
+        "Missing required fields for adding Web calendar",
+        { webcalUrl: !!webcalUrl },
+        LOG_SOURCE
+      );
+      return NextResponse.json(
+        { error: "Web calendar URL is required" },
+        { status: 400 }
+      );
+    }
+
+    logger.info(`Fetching Webcal from ${webcalUrl}`, {}, LOG_SOURCE);
+
+    try {
+      // Fetch WebCal using exported func from utils
+      const webCal = await fetchWebCalendar(webcalUrl);
+
+      if (!webCal.ok) {
+        logger.error(
+          `WebCal not found at ${webcalUrl}`,
+          { webcalUrl },
+          LOG_SOURCE
+        );
+        return NextResponse.json(
+          { error: "WebCal not found" },
+          { status: 404 }
+        );
+      }
+
+      const existingWebCal = await prisma.calendarFeed.findFirst({
+        where: {
+          url: webcalUrl,
+          userId,
+          id: calendarId,
+        },
+      });
+
+      if (existingWebCal) {
+        logger.info(
+          `Calendar already exists: ${calendarId}`,
+          { userId, webcalUrl },
+          LOG_SOURCE
+        );
+        return NextResponse.json({
+          success: true,
+          webCal: {
+            id: existingWebCal.id,
+            name: existingWebCal.name,
+            color: existingWebCal.color,
+            url: existingWebCal.url,
+          },
+        });
+      }
+
+      // Add the webcal to the DB
+      let webcalColor = webCal.color || "#BF616A";
+      if (typeof webcalColor !== "string") {
+        webcalColor = "#BF616A";
+      }
+      let webcalName = webCal.displayName || "Unnamed WebCalendar";
+      if (typeof webcalName !== "string") {
+        webcalName = "Unnamed WebCalendar";
+      }
+      const newWebCalendar = await prisma.calendarFeed.create({
+        data: {
+          name: webcalName,
+          color: webcalColor,
+          type: "WEBCAL",
+          url: webcalUrl,
+          userId,
+          enabled: true,
+          lastSync: formatISO(new Date()),
+          syncToken: webCal.syncToken ? String(webCal.syncToken) : null,
+        },
+      });
+
+      logger.info(
+        `Successfully added Webcal subscription: ${newWebCalendar.id}`,
+        { name: newWebCalendar.name, calendarId },
+        LOG_SOURCE
+      );
+
+      // Perform initial sync
+      try {
+        logger.info(
+          `Performing initial sync of Webcalendar: ${newWebCalendar.name}`,
+          { calendarId },
+          LOG_SOURCE
+        );
+        // const webcalService = new WebCalCalendarService(calendarId);
+        // await webcalService.syncCalendar(newWebCalendar.id, webcalUrl, userId);
+
+        // Update the last sync time
+        await prisma.calendarFeed.update({
+          where: { id: newWebCalendar.id, userId },
+          data: {
+            lastSync: newDate(),
+          },
+        });
+
+        logger.info(
+          `Initial sync completed for Web calendar: ${newWebCalendar.id}`,
+          { calendarId },
+          LOG_SOURCE
+        );
+      } catch (syncError) {
+        logger.error(
+          `Failed to perform initial sync of Web calendar: ${newWebCalendar.id}`,
+          {
+            error:
+              syncError instanceof Error
+                ? syncError.message
+                : String(syncError),
+            calendarId,
+          },
+          LOG_SOURCE
+        );
+        // Don't return an error here, as we've already created the calendar
+      }
+      return NextResponse.json({
+        success: true,
+        webCal: {
+          id: newWebCalendar.id,
+          name: newWebCalendar.name,
+          color: newWebCalendar.color,
+          url: newWebCalendar.url,
+        },
+      });
+    } catch (error) {
+      logger.error(
+        `Error adding WebCal calendar`,
+        {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack || null : null,
+        },
+        LOG_SOURCE
+      );
+      return NextResponse.json(
+        {
+          error: "Failed to add WebCal calendar",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    logger.error(
+      "Error in WebCal calendar route",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack || null : null,
+      },
+      LOG_SOURCE
+    );
+    return NextResponse.json(
+      {
+        error: "An unexpected error occurred",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}

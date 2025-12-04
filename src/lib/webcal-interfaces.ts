@@ -40,6 +40,17 @@ export interface ExtendedDAVClient {
   }) => Promise<DAVResponse>;
 }
 
+// Futile attempt to create my own client?
+export interface WebCalClient {
+  fetchWebCalUrl: () => Promise<string>;
+  fetchWebCalendar: () => Promise<WebCalCalendarObject[]>;
+  createObject: (params: {
+    url: string;
+    data: string;
+    headers?: Record<string, string>;
+  }) => Promise<Response>;
+}
+
 // Define the structure for calendar query parameters
 export interface CalendarQueryParams {
   url: string;
