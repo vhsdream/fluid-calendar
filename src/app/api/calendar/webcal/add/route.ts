@@ -8,7 +8,7 @@ import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { WebCalCalendarService } from "@/lib/webcal-calendar";
 
-import { fetchWebCalendar, parseWebCal } from "../utils";
+import { fetchWebCalData, parseWebCalText } from "../utils";
 
 const LOG_SOURCE = "WebCalAdd";
 
@@ -44,8 +44,8 @@ export async function POST(request: NextRequest) {
 
     try {
       // Fetch WebCal using exported func from utils
-      const webCal = await fetchWebCalendar(webcalUrl);
-      const webcalHeaders = webCal.headers;
+      const webCal = await fetchWebCalData(webcalUrl);
+      const webcalHeaders = webCal.webCalData.headers;
 
       if (!webcalHeaders.get("content-type")?.startsWith("text/calendar")) {
         logger.error(
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Parse webcal for some info
-      const webCalText = parseWebCal(await webCal.text());
+      const webCalText = parseWebCalText(webCal.webCalText);
       const webcalName = webCalText.webCalName;
 
       const existingWebCal = await prisma.calendarFeed.findFirst({
