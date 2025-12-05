@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 const LOG_SOURCE = "WebCalAvailable";
 
 /**
- * API route for discovering and listing available CalDAV calendars
+ * API route for discovering and listing available Webcal subscriptions
  * GET /api/calendar/webcal/available?calType=WEBCAL
  */
 export async function GET(request: NextRequest) {

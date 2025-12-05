@@ -82,9 +82,6 @@ export async function fetchWebCalendar(webcalUrl: string) {
     // Fetch the ICS file
     const webcalResponse = await fetch(webcalUrl);
     return webcalResponse;
-    // const icsText = await calendar.text();
-    // const events = parseWebCal(icsText);
-    // return events;
   } catch (error) {
     logger.error(
       "WebCalendar fetch failed",
@@ -116,7 +113,7 @@ export function parseWebCal(webCalText: string) {
     return {
       id: event.uid, // Unique ID (from ICS UID)
       title: event.summary || "Untitled Event", // Event title
-      color: event.color || "#5E81AC",
+      color: event.color || "#BF616A",
       start: event.startDate.toJSDate(), // Start time (convert to JS Date)
       end: event.endDate ? event.endDate.toJSDate() : null, // End time (optional)
       description: event.description || "", // Event description

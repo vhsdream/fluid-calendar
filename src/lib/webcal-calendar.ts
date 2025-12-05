@@ -1,6 +1,6 @@
 import { CalendarEvent, CalendarFeed, Prisma } from "@prisma/client";
 import ICAL from "ical.js";
-import { DAVDepth, DAVResponse } from "tsdav";
+import { DAVDepth } from "tsdav";
 
 import { newDate, newDateFromYMD } from "@/lib/date-utils";
 import { logger } from "@/lib/logger";
@@ -9,10 +9,9 @@ import { prisma } from "@/lib/prisma";
 // import { CalendarEventWithFeed } from "@/types/calendar";
 import { convertVEventToCalendarEvent } from "./caldav-helpers";
 import {
-  CalendarEventInput,
+  // CalendarEventInput,
   CalendarQueryParams,
-  SyncResult,
-  WebCalCalendarObject,
+  SyncResult, // WebCalCalendarObject,
   WebCalClient,
 } from "./webcal-interfaces";
 
@@ -59,7 +58,7 @@ export class WebCalCalendarService {
         "Failed to create Webcal client",
         {
           error: error instanceof Error ? error.message : "Unknown error",
-          accountId: this.feed.id,
+          id: this.feed.id,
         },
         LOG_SOURCE
       );
@@ -180,7 +179,7 @@ export class WebCalCalendarService {
         "Failed to fetch WebCal events",
         {
           error: error instanceof Error ? error.message : "Unknown error",
-          accountId: this.feed.accountId,
+          id: this.feed.id,
           webcalUrl,
         },
         LOG_SOURCE
@@ -223,11 +222,11 @@ export class WebCalCalendarService {
       false // Don't use expand for master events
     );
 
-    // Fetch calendar objects
-    const calendarObjects = await client.calendarQuery(queryParams);
+    // Fetch webcal data
+    const webcalData = await client.calendarQuery(queryParams);
 
     // Process the calendar objects to extract master events
-    return await this.processCalendarObjects(calendarObjects);
+    return await this.processWebcalData(webcalData);
   }
 
   /**
@@ -288,24 +287,20 @@ export class WebCalCalendarService {
    * @param mode Whether to prioritize master events or instance events
    * @returns Array of calendar events
    */
-  private async processCalendarObjects(
-    calendarObjects: Response[]
+  private async processWebcalData(
+    webcalData: Response[]
   ): Promise<CalendarEvent[]> {
     const events: CalendarEvent[] = [];
     // Track UIDs to avoid duplicates
     const processedUids = new Set<string>();
 
     // Convert Response objects to CalDAVCalendarObject format
-    const calendarData = this.extractCalendarData(calendarObjects);
+    // const calendarData = this.extractCalendarData(calendarObjects);
 
-    for (const obj of calendarData) {
+    for (const data of webcalData) {
       try {
-        // Extract iCalendar data
-        const icalData = this.extractICalData(obj);
-        if (!icalData) continue;
-
         // Parse the iCalendar data
-        const vevents = this.parseICalData(icalData, obj.url);
+        const vevents = this.parseICalData(await data.text(), data.url);
         if (!vevents || vevents.length === 0) continue;
 
         // Process each VEVENT component
@@ -329,10 +324,10 @@ export class WebCalCalendarService {
         }
       } catch (error) {
         logger.error(
-          "Failed to process calendar object",
+          "Failed to process webcal data",
           {
             error: error instanceof Error ? error.message : "Unknown error",
-            url: obj.url || "unknown",
+            url: data.url || "unknown",
           },
           LOG_SOURCE
         );
@@ -347,64 +342,64 @@ export class WebCalCalendarService {
    * @param calendarObjects Calendar objects returned by the server
    * @returns Array of calendar objects
    */
-  private extractCalendarData(
-    calendarObjects: DAVResponse[]
-  ): WebCalCalendarObject[] {
-    return calendarObjects.map((obj: DAVResponse) => {
-      // Get calendar data, which might be in different formats
-      const calendarDataProp =
-        obj.props?.["calendar-data"] || obj.props?.calendarData || "";
-
-      return {
-        url: obj.href || "",
-        etag: obj.props?.getetag || "",
-        data: calendarDataProp,
-      };
-    });
-  }
+  // private extractCalendarData(
+  //   calendarObjects: DAVResponse[]
+  // ): WebCalCalendarObject[] {
+  //   return calendarObjects.map((obj: DAVResponse) => {
+  //     // Get calendar data, which might be in different formats
+  //     const calendarDataProp =
+  //       obj.props?.["calendar-data"] || obj.props?.calendarData || "";
+  //
+  //     return {
+  //       url: obj.href || "",
+  //       etag: obj.props?.getetag || "",
+  //       data: calendarDataProp,
+  //     };
+  //   });
+  // }
 
   /**
    * Extract iCalendar data from a calendar object
    * @param obj Calendar object
    * @returns iCalendar data as string, or empty string if extraction fails
    */
-  private extractICalData(obj: WebCalCalendarObject): string {
-    let icalData = "";
-    if (typeof obj.data === "string") {
-      icalData = obj.data;
-    } else if (typeof obj.data === "object" && obj.data !== null) {
-      // Try to get _cdata property if it exists
-      const dataObj = obj.data as Record<string, unknown>;
-      if ("_cdata" in dataObj && typeof dataObj._cdata === "string") {
-        icalData = dataObj._cdata;
-      } else {
-        // Try to stringify the object as a fallback
-        try {
-          icalData = JSON.stringify(obj.data);
-        } catch (error) {
-          logger.warn(
-            "Failed to stringify calendar data",
-            {
-              url: obj.url,
-              error: error instanceof Error ? error.message : "Unknown error",
-            },
-            LOG_SOURCE
-          );
-          return ""; // Return empty string to indicate failure
-        }
-      }
-    }
-
-    if (!icalData) {
-      logger.warn(
-        "Empty iCalendar data",
-        { url: obj.url || "unknown" },
-        LOG_SOURCE
-      );
-    }
-
-    return icalData;
-  }
+  // private extractICalData(obj: WebCalCalendarObject): string {
+  //   let icalData = "";
+  //   if (typeof obj.data === "string") {
+  //     icalData = obj.data;
+  //   } else if (typeof obj.data === "object" && obj.data !== null) {
+  //     // Try to get _cdata property if it exists
+  //     const dataObj = obj.data as Record<string, unknown>;
+  //     if ("_cdata" in dataObj && typeof dataObj._cdata === "string") {
+  //       icalData = dataObj._cdata;
+  //     } else {
+  //       // Try to stringify the object as a fallback
+  //       try {
+  //         icalData = JSON.stringify(obj.data);
+  //       } catch (error) {
+  //         logger.warn(
+  //           "Failed to stringify calendar data",
+  //           {
+  //             url: obj.url,
+  //             error: error instanceof Error ? error.message : "Unknown error",
+  //           },
+  //           LOG_SOURCE
+  //         );
+  //         return ""; // Return empty string to indicate failure
+  //       }
+  //     }
+  //   }
+  //
+  //   if (!icalData) {
+  //     logger.warn(
+  //       "Empty iCalendar data",
+  //       { url: obj.url || "unknown" },
+  //       LOG_SOURCE
+  //     );
+  //   }
+  //
+  //   return icalData;
+  // }
 
   /**
    * Parse iCalendar data and extract VEVENT components
@@ -504,103 +499,6 @@ export class WebCalCalendarService {
       );
       throw error;
     }
-  }
-
-  /**
-   * Converts an internal event to iCalendar format
-   * @param event Calendar event to convert
-   * @returns iCalendar data as string
-   */
-  private convertToICalendar(event: CalendarEventInput): string {
-    // Create a new iCalendar component
-    const calendar = new ICAL.Component(["vcalendar", [], []]);
-    calendar.updatePropertyWithValue("prodid", "-//FluidCalendar//EN");
-    calendar.updatePropertyWithValue("version", "2.0");
-
-    // Create the event component
-    const vevent = new ICAL.Component(["vevent", [], []]);
-    vevent.updatePropertyWithValue("uid", event.id || crypto.randomUUID());
-    vevent.updatePropertyWithValue("summary", event.title);
-
-    if (event.description) {
-      vevent.updatePropertyWithValue("description", event.description);
-    }
-
-    if (event.location) {
-      vevent.updatePropertyWithValue("location", event.location);
-    }
-
-    // Add start and end times
-    const dtstart = new ICAL.Property("dtstart");
-    const dtend = new ICAL.Property("dtend");
-
-    if (event.allDay) {
-      dtstart.setParameter("value", "date");
-      dtend.setParameter("value", "date");
-
-      // Use ICAL.Time for all-day events with isDate=true
-      const formatDate = (date: Date) => {
-        const dateString = date.toISOString().split("T")[0];
-        return ICAL.Time.fromDateString(dateString);
-      };
-
-      dtstart.setValue(formatDate(event.start));
-
-      // For all-day events, the end date should be the next day in iCal
-      // Make sure we create a new date to avoid mutating the original
-      const endDate = new Date(event.end);
-      dtend.setValue(formatDate(endDate));
-    } else {
-      // Set as date-time with timezone
-      const startTime = ICAL.Time.fromJSDate(event.start, false);
-      const endTime = ICAL.Time.fromJSDate(event.end, false);
-
-      dtstart.setValue(startTime);
-      dtend.setValue(endTime);
-    }
-
-    vevent.addProperty(dtstart);
-    vevent.addProperty(dtend);
-
-    // Handle recurring events
-    if (event.isRecurring && event.recurrenceRule) {
-      // Convert from RRule string format (e.g., "FREQ=DAILY;INTERVAL=1") to iCalendar format
-      // The iCalendar format expects just the rule part without the property name
-      const rruleValue = event.recurrenceRule;
-
-      // Create a proper RRULE property
-      const rruleProp = new ICAL.Property("rrule");
-
-      // Parse the RRule string into an object
-      const rruleObj: Record<string, string | number | string[]> = {};
-      rruleValue.split(";").forEach((part) => {
-        const [key, value] = part.split("=");
-        if (key && value) {
-          // Handle array values like BYDAY=MO,TU,WE
-          if (value.includes(",")) {
-            rruleObj[key.toLowerCase()] = value.split(",");
-          } else if (!isNaN(Number(value))) {
-            // Handle numeric values
-            rruleObj[key.toLowerCase()] = Number(value);
-          } else {
-            // Handle string values
-            rruleObj[key.toLowerCase()] = value;
-          }
-        }
-      });
-
-      // Set the value as a jCal-compatible object
-      rruleProp.setValue(rruleObj);
-
-      // Add the property to the event
-      vevent.addProperty(rruleProp);
-    }
-
-    // Add the event to the calendar
-    calendar.addSubcomponent(vevent);
-
-    // Return the iCalendar string
-    return calendar.toString();
   }
 
   /**

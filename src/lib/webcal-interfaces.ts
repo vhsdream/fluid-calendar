@@ -1,7 +1,5 @@
 import { CalendarEvent } from "@prisma/client";
 import ICAL from "ical.js";
-import { DAVResponse } from "tsdav";
-import { DAVCalendar } from "tsdav";
 
 // Define a type for iCalendar recurrence rules
 export interface ICalRRule {
@@ -19,37 +17,11 @@ export interface ICalRRule {
   [key: string]: unknown; // Allow for other properties
 }
 
-// Define an extended client type that includes the actual methods used
-export interface ExtendedDAVClient {
-  fetchPrincipalUrl: () => Promise<string>;
-  fetchCalendars: () => Promise<DAVCalendar[]>;
-  calendarQuery: (params: CalendarQueryParams) => Promise<DAVResponse[]>;
-  createObject: (params: {
-    url: string;
-    data: string;
-    headers?: Record<string, string>;
-  }) => Promise<DAVResponse>;
-  deleteObject: (params: {
-    url: string;
-    headers?: Record<string, string>;
-  }) => Promise<DAVResponse>;
-  updateObject: (params: {
-    url: string;
-    data: string;
-    headers?: Record<string, string>;
-  }) => Promise<DAVResponse>;
-}
-
 // Futile attempt to create my own client?
 export interface WebCalClient {
   // fetchWebCalUrl: () => Promise<string>;
-  fetchWebCalendar: () => Promise<WebCalCalendarObject[]>;
+  fetchWebCalendar: () => Promise<string>;
   calendarQuery: (params: CalendarQueryParams) => Promise<Response[]>;
-  createObject: (params: {
-    url: string;
-    data: string;
-    headers?: Record<string, string>;
-  }) => Promise<Response>;
 }
 
 // Define the structure for calendar query parameters
@@ -78,13 +50,13 @@ export interface CalendarQueryParams {
 }
 
 /**
- * Interface for calendar objects returned by the CalDAV server
+ * Interface for Web calendar objects
  */
-export interface WebCalCalendarObject {
-  url: string;
-  etag: string;
-  data: string | { _cdata: string } | Record<string, unknown>; // iCalendar data can be a string or an object with _cdata property
-}
+// export interface WebCalCalendarObject {
+//   url: string;
+//   etag?: string;
+//   data?: string | { _cdata: string } | Record<string, unknown>; // iCalendar data can be a string or an object with _cdata property
+// }
 
 /**
  * Interface for sync results

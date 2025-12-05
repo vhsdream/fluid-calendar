@@ -6,11 +6,11 @@ import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { WebCalCalendarService } from "@/lib/webcal-calendar";
 
-const LOG_SOURCE = "CalDAVCalendarSyncAPI";
+const LOG_SOURCE = "WebCalUpdateAPI";
 
 /**
- * API route for syncing a Web Calendar
- * PUT /api/calendar/webcal/sync
+ * API route for updating a Web Calendar
+ * PUT /api/calendar/webcal/update
  * Body: { feedId }
  */
 export async function PUT(req: NextRequest) {

@@ -6,8 +6,8 @@ import { authenticateRequest } from "@/lib/auth/api-auth";
 import { newDate } from "@/lib/date-utils";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { WebCalCalendarService } from "@/lib/webcal-calendar";
 
-// import { WebCalCalendarService } from "@/lib/webcal-calendar";
 import { fetchWebCalendar, parseWebCal } from "../utils";
 
 const LOG_SOURCE = "WebCalAdd";
@@ -86,9 +86,6 @@ export async function POST(request: NextRequest) {
 
       // Parse webcal for some info
       const webCalText = parseWebCal(await webCal.text());
-      // const icsText = parseWebCal(webCalText);
-      // const jcalData = ICAL.parse(webCalText);
-      // const comp = new ICAL.Component(jcalData);
 
       // Add the webcal to the DB
       const webcalName = webCalText.webCalName;
@@ -132,15 +129,10 @@ export async function POST(request: NextRequest) {
           throw new Error(`Calendar feed not found for WebCal: ${webcalUrl}`);
         }
 
-        //delete all events from the database
-        await prisma.calendarEvent.deleteMany({
-          where: {
-            feedId: feed.id,
-          },
-        });
-
         // Process events and update database
-        // const events = webCalText.events;
+        const webCalService = new WebCalCalendarService(feed);
+        await webCalService.syncCalendar(newWebCalendar.id, webcalUrl, userId);
+
         await prisma.calendarFeed.update({
           where: { id: newWebCalendar.id, userId },
           data: {
