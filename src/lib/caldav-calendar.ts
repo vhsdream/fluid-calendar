@@ -446,7 +446,7 @@ export class CalDAVCalendarService {
    * @returns Sync result with added, updated, and deleted events
    */
   async syncCalendar(
-    feedId: string,
+    id: string,
     calendarPath: string,
     userId: string
   ): Promise<SyncResult> {
@@ -454,6 +454,7 @@ export class CalDAVCalendarService {
       // Get the calendar feed from the database
       const feed = await prisma.calendarFeed.findFirst({
         where: {
+          id,
           url: calendarPath,
           accountId: this.account.id,
           type: "CALDAV",

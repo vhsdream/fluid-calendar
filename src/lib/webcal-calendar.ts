@@ -11,7 +11,7 @@ import { convertVEventToCalendarEvent } from "./caldav-helpers";
 import {
   // CalendarEventInput,
   CalendarQueryParams,
-  SyncResult, // WebCalCalendarObject,
+  SyncResult,
   WebCalClient,
 } from "./webcal-interfaces";
 
@@ -33,8 +33,8 @@ export class WebCalCalendarService {
   }
 
   /**
-   * Creates and initializes the CalDAV client
-   * @returns Initialized DAVClient
+   * Creates and initializes the Webcal client
+   * @returns Initialized WebCalClient
    */
   private async getClient(): Promise<WebCalClient> {
     if (this.client) {
@@ -147,10 +147,10 @@ export class WebCalCalendarService {
   }
 
   /**
-   * Fetches events from a CalDAV calendar for a specific time range
+   * Fetches events from a web calendar for a specific time range
    * @param start Start date
    * @param end End date
-   * @param calendarPath Path to the calendar
+   * @param webcalUrl URL of the calendar
    * @returns Array of calendar events
    */
   private async getEvents(
@@ -166,8 +166,8 @@ export class WebCalCalendarService {
       const masterEvents = await this.fetchMasterEvents(
         client,
         start,
-        end,
-        webcalUrl
+        end
+        // webcalUrl
       );
 
       const instanceEvents = await this.expandRecurringEvents(masterEvents);
@@ -201,22 +201,22 @@ export class WebCalCalendarService {
   }
 
   /**
-   * Fetch master events from the CalDAV server
-   * @param client CalDAV client
+   * Fetch master events from the Webcal data
+   * @param client Webcal client
    * @param start Start date
    * @param end End date
-   * @param calendarPath Path to the calendar
+   * @param webcalUrl The webcal URL
    * @returns Array of master events
    */
   private async fetchMasterEvents(
     client: WebCalClient,
     start: Date,
-    end: Date,
-    webcalUrl: string
+    end: Date
+    // webcalUrl: string
   ): Promise<CalendarEvent[]> {
     // Create query parameters for master events
     const queryParams = this.createWebCalQueryParams(
-      webcalUrl,
+      // webcalUrl,
       start,
       end,
       false // Don't use expand for master events
@@ -230,15 +230,15 @@ export class WebCalCalendarService {
   }
 
   /**
-   * Create CalDAV query parameters
-   * @param calendarPath Path to the calendar
+   * Create Webcal query parameters
+   * @param webcalUrl URL of the web calendar
    * @param start Start date
    * @param end End date
    * @param useExpand Whether to use the expand parameter
-   * @returns CalDAV query parameters
+   * @returns Webcal query parameters
    */
   private createWebCalQueryParams(
-    webcalUrl: string,
+    // webcalUrl: string,
     start: Date,
     end: Date,
     useExpand: boolean
@@ -257,7 +257,7 @@ export class WebCalCalendarService {
     };
 
     return {
-      url: webcalUrl,
+      // url: webcalUrl,
       props,
       filters: {
         "comp-filter": {
@@ -282,8 +282,8 @@ export class WebCalCalendarService {
   }
 
   /**
-   * Process calendar objects returned by the CalDAV server
-   * @param calendarObjects Calendar objects returned by the server
+   * Process calendar data from the ICS data
+   * @param webcalData The data
    * @param mode Whether to prioritize master events or instance events
    * @returns Array of calendar events
    */
