@@ -59,18 +59,23 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Parse webcal for some info
+      const webCalText = parseWebCal(await webCal.text());
+      const webcalName = webCalText.webCalName;
+
       const existingWebCal = await prisma.calendarFeed.findFirst({
         where: {
           url: webcalUrl,
           userId,
           id: calendarId,
+          name: webcalName,
         },
       });
 
       if (existingWebCal) {
         logger.info(
           `Calendar already exists: ${calendarId}`,
-          { userId, webcalUrl },
+          { userId, webcalUrl, webcalName },
           LOG_SOURCE
         );
         return NextResponse.json({
@@ -84,11 +89,7 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Parse webcal for some info
-      const webCalText = parseWebCal(await webCal.text());
-
       // Add the webcal to the DB
-      const webcalName = webCalText.webCalName;
       const webcalColor = "#BF616A";
       const newWebCalendar = await prisma.calendarFeed.create({
         data: {
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
           throw new Error(`Calendar feed not found for WebCal: ${webcalUrl}`);
         }
 
-        // Process events and update database
+        // Process events and update database - currently BROKEN
         const webCalService = new WebCalCalendarService(feed);
         await webCalService.syncCalendar(newWebCalendar.id, webcalUrl, userId);
 

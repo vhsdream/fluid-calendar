@@ -19,14 +19,14 @@ export interface ICalRRule {
 
 // Futile attempt to create my own client?
 export interface WebCalClient {
-  // fetchWebCalUrl: () => Promise<string>;
+  fetchWebCalUrl: () => Promise<string>;
   fetchWebCalendar: () => Promise<CalendarEvent>;
   calendarQuery: (params: CalendarQueryParams) => Promise<Response[]>;
 }
 
 // Define the structure for calendar query parameters
 export interface CalendarQueryParams {
-  // url: string;
+  url: string;
   props: Record<string, unknown>;
   filters: {
     "comp-filter": {

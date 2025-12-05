@@ -1,7 +1,7 @@
 import { CalendarEvent, CalendarFeed, Prisma } from "@prisma/client";
 import ICAL from "ical.js";
-import { DAVDepth } from "tsdav";
 
+// import { DAVDepth } from "tsdav";
 import { newDate, newDateFromYMD } from "@/lib/date-utils";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
@@ -166,8 +166,8 @@ export class WebCalCalendarService {
       const masterEvents = await this.fetchMasterEvents(
         client,
         start,
-        end
-        // webcalUrl
+        end,
+        webcalUrl
       );
 
       const instanceEvents = await this.expandRecurringEvents(masterEvents);
@@ -211,12 +211,12 @@ export class WebCalCalendarService {
   private async fetchMasterEvents(
     client: WebCalClient,
     start: Date,
-    end: Date
-    // webcalUrl: string
+    end: Date,
+    webcalUrl: string
   ): Promise<CalendarEvent[]> {
     // Create query parameters for master events
     const queryParams = this.createWebCalQueryParams(
-      // webcalUrl,
+      webcalUrl,
       start,
       end,
       false // Don't use expand for master events
@@ -238,7 +238,7 @@ export class WebCalCalendarService {
    * @returns Webcal query parameters
    */
   private createWebCalQueryParams(
-    // webcalUrl: string,
+    webcalUrl: string,
     start: Date,
     end: Date,
     useExpand: boolean
@@ -257,7 +257,7 @@ export class WebCalCalendarService {
     };
 
     return {
-      // url: webcalUrl,
+      url: webcalUrl,
       props,
       filters: {
         "comp-filter": {
@@ -277,7 +277,7 @@ export class WebCalCalendarService {
           },
         },
       },
-      depth: "1" as DAVDepth,
+      depth: "1",
     };
   }
 
@@ -343,17 +343,17 @@ export class WebCalCalendarService {
    * @returns Array of calendar objects
    */
   // private extractCalendarData(
-  //   calendarObjects: DAVResponse[]
-  // ): WebCalCalendarObject[] {
-  //   return calendarObjects.map((obj: DAVResponse) => {
+  //   webcalData: Response[]
+  // ): Response[] {
+  //   return webcalData.map((obj: Response) => {
   //     // Get calendar data, which might be in different formats
-  //     const calendarDataProp =
+  //     const webcalDataProp =
   //       obj.props?.["calendar-data"] || obj.props?.calendarData || "";
   //
   //     return {
-  //       url: obj.href || "",
+  //       url: || "",
   //       etag: obj.props?.getetag || "",
-  //       data: calendarDataProp,
+  //       data: webcalDataProp,
   //     };
   //   });
   // }
