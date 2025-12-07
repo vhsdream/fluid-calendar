@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 import { CalendarEvent, CalendarFeed, Prisma } from "@prisma/client";
 import ICAL from "ical.js";
 
@@ -150,13 +152,13 @@ export class WebCalCalendarService {
    * Fetches events from a web calendar for a specific time range
    * @param start Start date
    * @param end End date
-   * @param webcalUrl URL of the calendar
+   * @param webCalUrl URL of the calendar
    * @returns Array of calendar events
    */
   private async getEvents(
     start: Date,
     end: Date,
-    webcalUrl: string
+    webCalUrl: string
   ): Promise<CalendarEvent[]> {
     try {
       const client = await this.getClient();
@@ -167,7 +169,7 @@ export class WebCalCalendarService {
         client,
         start,
         end,
-        webcalUrl
+        webCalUrl
       );
 
       const instanceEvents = await this.expandRecurringEvents(masterEvents);
@@ -176,11 +178,11 @@ export class WebCalCalendarService {
       return allEvents;
     } catch (error) {
       logger.error(
-        "Failed to fetch WebCal events",
+        "Dammit! Failed to fetch WebCal events",
         {
           error: error instanceof Error ? error.message : "Unknown error",
           id: this.feed.id,
-          webcalUrl,
+          webCalUrl,
         },
         LOG_SOURCE
       );
@@ -205,18 +207,18 @@ export class WebCalCalendarService {
    * @param client Webcal client
    * @param start Start date
    * @param end End date
-   * @param webcalUrl The webcal URL
+   * @param webCalUrl The webcal URL
    * @returns Array of master events
    */
   private async fetchMasterEvents(
     client: WebCalClient,
     start: Date,
     end: Date,
-    webcalUrl: string
+    webCalUrl: string
   ): Promise<CalendarEvent[]> {
     // Create query parameters for master events
     const queryParams = this.createWebCalQueryParams(
-      webcalUrl,
+      webCalUrl,
       start,
       end,
       false // Don't use expand for master events
@@ -231,14 +233,14 @@ export class WebCalCalendarService {
 
   /**
    * Create Webcal query parameters
-   * @param webcalUrl URL of the web calendar
+   * @param webCalUrl URL of the web calendar
    * @param start Start date
    * @param end End date
    * @param useExpand Whether to use the expand parameter
    * @returns Webcal query parameters
    */
   private createWebCalQueryParams(
-    webcalUrl: string,
+    webCalUrl: string,
     start: Date,
     end: Date,
     useExpand: boolean
@@ -257,7 +259,7 @@ export class WebCalCalendarService {
     };
 
     return {
-      url: webcalUrl,
+      url: webCalUrl,
       props,
       filters: {
         "comp-filter": {
@@ -288,7 +290,7 @@ export class WebCalCalendarService {
    * @returns Array of calendar events
    */
   private async processWebcalData(
-    webCalResponse: Response
+    webCalResponse: NextResponse
   ): Promise<CalendarEvent[]> {
     const events: CalendarEvent[] = [];
     // Track UIDs to avoid duplicates
@@ -331,7 +333,6 @@ export class WebCalCalendarService {
         LOG_SOURCE
       );
     }
-
     return events;
   }
 
@@ -429,12 +430,12 @@ export class WebCalCalendarService {
 
   /**
    * Synchronizes a Web calendar with the local database
-   * @param webcalUrl Calendar URL
+   * @param webCalUrl Calendar URL
    * @returns Sync result with added, updated, and deleted events
    */
   async syncCalendar(
     id: string,
-    webcalUrl: string,
+    webCalUrl: string,
     userId: string
   ): Promise<SyncResult> {
     try {
@@ -442,14 +443,14 @@ export class WebCalCalendarService {
       const feed = await prisma.calendarFeed.findFirst({
         where: {
           id,
-          url: webcalUrl,
+          url: webCalUrl,
           type: "WEBCAL",
           userId,
         },
       });
 
       if (!feed) {
-        throw new Error(`Calendar feed not found for WebCal: ${webcalUrl}`);
+        throw new Error(`Calendar feed not found for WebCal: ${webCalUrl}`);
       }
       //delete all events from the database
       await prisma.calendarEvent.deleteMany({
@@ -468,7 +469,7 @@ export class WebCalCalendarService {
       const events = await this.getEvents(
         timeRange.start,
         timeRange.end,
-        webcalUrl
+        webCalUrl
       );
 
       // Process events and update database
@@ -490,7 +491,7 @@ export class WebCalCalendarService {
         "Failed to sync Webcal calendar",
         {
           error: error instanceof Error ? error.message : "Unknown error",
-          webcalUrl,
+          webCalUrl,
           accountId: this.feed.accountId,
         },
         LOG_SOURCE
