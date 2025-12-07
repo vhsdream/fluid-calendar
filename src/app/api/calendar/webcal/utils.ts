@@ -1,5 +1,3 @@
-import ICAL from "ical.js";
-
 import { logger } from "@/lib/logger";
 
 const LOG_SOURCE = "WebcalUtils";
@@ -77,14 +75,16 @@ export function formatAbsoluteUrl(baseUrl: string, path?: string): string {
  * @param webcalUrl the URL
  * @returns A promise that returns the full text of the ICS file
  */
-export async function fetchWebCalData(webcalUrl: string) {
+export async function fetchWebCalInfo(webCalUrl: string) {
   try {
     // Fetch the ICS file
-    const webCalData = await fetch(webcalUrl);
+    const webCalData = await fetch(webCalUrl);
     const webCalText = await webCalData.text();
+    const headerInfo = webCalData.headers;
+
     return {
-      webCalData,
       webCalText,
+      headerInfo,
     };
   } catch (error) {
     logger.error(
@@ -96,39 +96,4 @@ export async function fetchWebCalData(webcalUrl: string) {
     );
     throw error;
   }
-}
-
-export function parseWebCalText(webCalText: string) {
-  // Parse the ICS text into a jCal object (ical.js format)
-  const jcalData = ICAL.parse(webCalText);
-  const comp = new ICAL.Component(jcalData);
-
-  // try a thing
-  const webCalName =
-    comp.getFirstPropertyValue("x-wr-calname")?.toString() ||
-    "Unnamed Webcalendar";
-
-  // Extract all VwebCalEvent components (events)
-  const webCalEvents = comp.getAllSubcomponents("vevent").map((vevent) => {
-    // Convert vwebCalEvent to an ICAL.Event object for easier access
-    const webCalEvent = new ICAL.Event(vevent);
-
-    // Map ICS properties to FullCalendar webCalEvent format
-    return {
-      id: webCalEvent.uid, // Unique ID (from ICS UID)
-      title: webCalEvent.summary || "Untitled Event", // Event title
-      color: webCalEvent.color || "#BF616A",
-      start: webCalEvent.startDate.toJSDate(), // Start time (convert to JS Date)
-      end: webCalEvent.endDate ? webCalEvent.endDate.toJSDate() : null, // End time (optional)
-      description: webCalEvent.description || "", // Event description
-      location: webCalEvent.location || "", // Event location
-      isRecurring: webCalEvent.isRecurring,
-      isRecurrenceException: webCalEvent.isRecurrenceException,
-      // Add more fields (e.g., url, color) as needed
-    };
-  });
-  return {
-    webCalName,
-    webCalEvents,
-  };
 }

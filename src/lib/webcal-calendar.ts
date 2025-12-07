@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 // import { CalendarEventWithFeed } from "@/types/calendar";
-import { convertVEventToCalendarEvent } from "./caldav-helpers";
+import { convertWebCalEvent } from "./webcal-helpers";
 import {
   // CalendarEventInput,
   CalendarQueryParams,
@@ -288,50 +288,48 @@ export class WebCalCalendarService {
    * @returns Array of calendar events
    */
   private async processWebcalData(
-    webcalData: Response[]
+    webCalResponse: Response
   ): Promise<CalendarEvent[]> {
     const events: CalendarEvent[] = [];
     // Track UIDs to avoid duplicates
     const processedUids = new Set<string>();
 
-    // Convert Response objects to CalDAVCalendarObject format
-    // const calendarData = this.extractCalendarData(calendarObjects);
+    // Convert Response object to String
+    const webCalData = await webCalResponse.text();
 
-    for (const data of webcalData) {
-      try {
-        // Parse the iCalendar data
-        const vevents = this.parseICalData(await data.text(), data.url);
-        if (!vevents || vevents.length === 0) continue;
+    try {
+      // Parse the iCalendar data
+      const vevents = this.parseICalData(webCalData, webCalResponse.url);
+      // if (!vevents || vevents.length === 0) continue;
 
-        // Process each VEVENT component
-        for (const vevent of vevents) {
-          // Extract event properties
-          const { uid, hasRRule, hasRecurrenceId } =
-            this.extractEventProperties(vevent);
+      // Process each VEVENT component
+      for (const vevent of vevents as ICAL.Component[]) {
+        // Extract event properties
+        const { uid, hasRRule, hasRecurrenceId } =
+          this.extractEventProperties(vevent);
 
-          // Convert VEVENT to CalendarEvent
-          const event = convertVEventToCalendarEvent(vevent);
+        // Convert VEVENT to CalendarEvent
+        const event = convertWebCalEvent(vevent);
 
-          // Set event properties based on its type
-          this.setEventTypeProperties(
-            event,
-            uid,
-            hasRRule,
-            hasRecurrenceId,
-            processedUids
-          );
-          events.push(event);
-        }
-      } catch (error) {
-        logger.error(
-          "Failed to process webcal data",
-          {
-            error: error instanceof Error ? error.message : "Unknown error",
-            url: data.url || "unknown",
-          },
-          LOG_SOURCE
+        // Set event properties based on its type
+        this.setEventTypeProperties(
+          event,
+          uid,
+          hasRRule,
+          hasRecurrenceId,
+          processedUids
         );
+        events.push(event);
       }
+    } catch (error) {
+      logger.error(
+        "Failed to process webcal data",
+        {
+          error: error instanceof Error ? error.message : "Unknown error",
+          url: webCalResponse.url || "unknown",
+        },
+        LOG_SOURCE
+      );
     }
 
     return events;
@@ -408,11 +406,11 @@ export class WebCalCalendarService {
    * @returns Array of VEVENT components
    */
   private parseICalData(
-    icalData: string,
-    url: string
+    webCalData: string,
+    webCalUrl: string
   ): ICAL.Component[] | null {
     try {
-      const jcalData = ICAL.parse(icalData);
+      const jcalData = ICAL.parse(webCalData);
       const vcalendar = new ICAL.Component(jcalData);
       const vevents = vcalendar.getAllSubcomponents("vevent");
       return vevents;
@@ -421,7 +419,7 @@ export class WebCalCalendarService {
         "Failed to parse iCalendar data",
         {
           error: error instanceof Error ? error.message : "Unknown error",
-          url,
+          webCalUrl,
         },
         LOG_SOURCE
       );
@@ -466,7 +464,7 @@ export class WebCalCalendarService {
       // Define time range for events (1 year back to 1 year ahead)
       const timeRange = this.getTimeRange();
 
-      // Fetch events from CalDAV server
+      // Fetch events from webcal
       const events = await this.getEvents(
         timeRange.start,
         timeRange.end,

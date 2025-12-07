@@ -8,7 +8,7 @@ import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { WebCalCalendarService } from "@/lib/webcal-calendar";
 
-import { fetchWebCalData, parseWebCalText } from "../utils";
+import { fetchWebCalInfo } from "../utils";
 
 const LOG_SOURCE = "WebCalAdd";
 
@@ -26,12 +26,12 @@ export async function POST(request: NextRequest) {
     const userId = auth.userId;
 
     const json = await request.json();
-    const { webcalUrl, calendarId } = json;
+    const { webCalUrl, calendarId } = json;
 
-    if (!webcalUrl) {
+    if (!webCalUrl) {
       logger.error(
         "Missing required fields for adding Web calendar",
-        { webcalUrl: !!webcalUrl },
+        { webCalUrl: !!webCalUrl },
         LOG_SOURCE
       );
       return NextResponse.json(
@@ -40,17 +40,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.info(`Fetching Webcal from ${webcalUrl}`, {}, LOG_SOURCE);
+    logger.info(`Fetching Webcal from ${webCalUrl}`, {}, LOG_SOURCE);
 
     try {
       // Fetch WebCal using exported func from utils
-      const webCal = await fetchWebCalData(webcalUrl);
-      const webcalHeaders = webCal.webCalData.headers;
+      const webCal = await fetchWebCalInfo(webCalUrl);
+      const webCalHeaders = webCal.headerInfo;
 
-      if (!webcalHeaders.get("content-type")?.startsWith("text/calendar")) {
+      if (!webCalHeaders.get("content-type")?.startsWith("text/calendar")) {
         logger.error(
-          `WebCal not found at ${webcalUrl}`,
-          { webcalUrl },
+          `WebCal not found at ${webCalUrl}`,
+          { webCalUrl },
           LOG_SOURCE
         );
         return NextResponse.json(
@@ -59,23 +59,23 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Parse webcal for some info
-      const webCalText = parseWebCalText(webCal.webCalText);
-      const webcalName = webCalText.webCalName;
+      // Parse webcal for the Calendar name
+      const webCalParsed: string[] = webCal.webCalText.split(/[\r\n:]+/, 8);
+      const webCalName: string = webCalParsed[7];
 
       const existingWebCal = await prisma.calendarFeed.findFirst({
         where: {
-          url: webcalUrl,
+          url: webCalUrl,
           userId,
           id: calendarId,
-          name: webcalName,
+          name: webCalName,
         },
       });
 
       if (existingWebCal) {
         logger.info(
           `Calendar already exists: ${calendarId}`,
-          { userId, webcalUrl, webcalName },
+          { userId, webCalUrl, webCalName },
           LOG_SOURCE
         );
         return NextResponse.json({
@@ -90,13 +90,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Add the webcal to the DB
-      const webcalColor = "#BF616A";
+      const webCalColor = "#BF616A";
       const newWebCalendar = await prisma.calendarFeed.create({
         data: {
-          name: webcalName,
-          color: webcalColor,
+          name: webCalName,
+          color: webCalColor,
           type: "WEBCAL",
-          url: webcalUrl,
+          url: webCalUrl,
           userId,
           enabled: true,
           lastSync: formatISO(new Date()),
@@ -120,19 +120,19 @@ export async function POST(request: NextRequest) {
         const feed = await prisma.calendarFeed.findFirst({
           where: {
             id: calendarId,
-            url: webcalUrl,
+            url: webCalUrl,
             type: "WEBCAL",
             userId,
           },
         });
 
         if (!feed) {
-          throw new Error(`Calendar feed not found for WebCal: ${webcalUrl}`);
+          throw new Error(`Calendar feed not found for WebCal: ${webCalUrl}`);
         }
 
         // Process events and update database - currently BROKEN
         const webCalService = new WebCalCalendarService(feed);
-        await webCalService.syncCalendar(newWebCalendar.id, webcalUrl, userId);
+        await webCalService.syncCalendar(newWebCalendar.id, webCalUrl, userId);
 
         await prisma.calendarFeed.update({
           where: { id: newWebCalendar.id, userId },
