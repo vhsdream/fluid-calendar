@@ -1,10 +1,9 @@
-import { NextResponse } from "next/server";
-
+// import { NextResponse } from "next/server";
 import { CalendarEvent, CalendarFeed, Prisma } from "@prisma/client";
 import ICAL from "ical.js";
 
 // import { DAVDepth } from "tsdav";
-import { newDate, newDateFromYMD } from "@/lib/date-utils";
+import { newDate } from "@/lib/date-utils";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
@@ -12,7 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { convertWebCalEvent } from "./webcal-helpers";
 import {
   // CalendarEventInput,
-  CalendarQueryParams,
+  // CalendarQueryParams,
   SyncResult,
   WebCalClient,
 } from "./webcal-interfaces";
@@ -68,85 +67,85 @@ export class WebCalCalendarService {
     }
   }
 
-  private async expandRecurringEvents(
-    masterEvents: CalendarEvent[]
-  ): Promise<CalendarEvent[]> {
-    const instances: CalendarEvent[] = [];
-    for (const masterEvent of masterEvents) {
-      if (masterEvent.isRecurring) {
-        const instanceEvents = await this.expandMasterEvent(masterEvent);
-        instances.push(...instanceEvents);
-      }
-    }
-    return instances;
-  }
-
-  private async expandMasterEvent(
-    masterEvent: CalendarEvent
-  ): Promise<CalendarEvent[]> {
-    //todo expand master event locally and return all instances
-    if (!masterEvent.isRecurring || !masterEvent.recurrenceRule) {
-      return [];
-    }
-
-    try {
-      // Import RRule from the rrule library
-      const { RRule } = await import("rrule");
-
-      // Define the time range for expansion (1 year back to 1 year ahead)
-      const timeRange = this.getTimeRange();
-
-      // Parse the recurrence rule
-      const options = RRule.parseString(masterEvent.recurrenceRule);
-
-      // Set the start date from the master event
-      options.dtstart = masterEvent.start;
-
-      // Create the RRule instance
-      const rule = new RRule(options);
-
-      // Get all occurrences between the start and end dates
-      const occurrences = rule.between(timeRange.start, timeRange.end, true);
-
-      // Create instance events for each occurrence
-      const instanceEvents: CalendarEvent[] = occurrences
-        .map((date) => {
-          // Calculate the duration of the master event
-          const duration =
-            masterEvent.end.getTime() - masterEvent.start.getTime();
-
-          // Create a new end date for this instance
-          const endDate = new Date(date.getTime() + duration);
-
-          // Create the instance event
-          return {
-            ...masterEvent,
-            externalEventId: masterEvent.externalEventId,
-            start: date,
-            end: endDate,
-            isRecurring: true,
-            recurrenceRule: masterEvent.recurrenceRule,
-            isMaster: false,
-            recurringEventId: masterEvent.externalEventId,
-          };
-        })
-        .filter(Boolean) as CalendarEvent[];
-
-      return instanceEvents;
-    } catch (error) {
-      logger.error(
-        "Failed to expand master event",
-        {
-          error: error instanceof Error ? error.message : "Unknown error",
-          eventId: masterEvent.id,
-          title: masterEvent.title,
-          recurrenceRule: masterEvent.recurrenceRule,
-        },
-        LOG_SOURCE
-      );
-      return [];
-    }
-  }
+  // private async expandRecurringEvents(
+  //   masterEvents: CalendarEvent[]
+  // ): Promise<CalendarEvent[]> {
+  //   const instances: CalendarEvent[] = [];
+  //   for (const masterEvent of masterEvents) {
+  //     if (masterEvent.isRecurring) {
+  //       const instanceEvents = await this.expandMasterEvent(masterEvent);
+  //       instances.push(...instanceEvents);
+  //     }
+  //   }
+  //   return instances;
+  // }
+  //
+  // private async expandMasterEvent(
+  //   masterEvent: CalendarEvent
+  // ): Promise<CalendarEvent[]> {
+  //   //todo expand master event locally and return all instances
+  //   if (!masterEvent.isRecurring || !masterEvent.recurrenceRule) {
+  //     return [];
+  //   }
+  //
+  //   try {
+  //     // Import RRule from the rrule library
+  //     const { RRule } = await import("rrule");
+  //
+  //     // Define the time range for expansion (1 year back to 1 year ahead)
+  //     const timeRange = this.getTimeRange();
+  //
+  //     // Parse the recurrence rule
+  //     const options = RRule.parseString(masterEvent.recurrenceRule);
+  //
+  //     // Set the start date from the master event
+  //     options.dtstart = masterEvent.start;
+  //
+  //     // Create the RRule instance
+  //     const rule = new RRule(options);
+  //
+  //     // Get all occurrences between the start and end dates
+  //     const occurrences = rule.between(timeRange.start, timeRange.end, true);
+  //
+  //     // Create instance events for each occurrence
+  //     const instanceEvents: CalendarEvent[] = occurrences
+  //       .map((date) => {
+  //         // Calculate the duration of the master event
+  //         const duration =
+  //           masterEvent.end.getTime() - masterEvent.start.getTime();
+  //
+  //         // Create a new end date for this instance
+  //         const endDate = new Date(date.getTime() + duration);
+  //
+  //         // Create the instance event
+  //         return {
+  //           ...masterEvent,
+  //           externalEventId: masterEvent.externalEventId,
+  //           start: date,
+  //           end: endDate,
+  //           isRecurring: true,
+  //           recurrenceRule: masterEvent.recurrenceRule,
+  //           isMaster: false,
+  //           recurringEventId: masterEvent.externalEventId,
+  //         };
+  //       })
+  //       .filter(Boolean) as CalendarEvent[];
+  //
+  //     return instanceEvents;
+  //   } catch (error) {
+  //     logger.error(
+  //       "Failed to expand master event",
+  //       {
+  //         error: error instanceof Error ? error.message : "Unknown error",
+  //         eventId: masterEvent.id,
+  //         title: masterEvent.title,
+  //         recurrenceRule: masterEvent.recurrenceRule,
+  //       },
+  //       LOG_SOURCE
+  //     );
+  //     return [];
+  //   }
+  // }
 
   /**
    * Fetches events from a web calendar for a specific time range
@@ -155,27 +154,14 @@ export class WebCalCalendarService {
    * @param webCalUrl URL of the calendar
    * @returns Array of calendar events
    */
-  private async getEvents(
-    start: Date,
-    end: Date,
-    webCalUrl: string
-  ): Promise<CalendarEvent[]> {
+  private async getEvents(webCalUrl: string): Promise<CalendarEvent[]> {
     try {
       const client = await this.getClient();
       if (!client) return [];
 
       // Fetch master events (without expand)
-      const masterEvents = await this.fetchMasterEvents(
-        client,
-        start,
-        end,
-        webCalUrl
-      );
-
-      const instanceEvents = await this.expandRecurringEvents(masterEvents);
-
-      const allEvents = [...masterEvents, ...instanceEvents];
-      return allEvents;
+      const allEvents = await client.fetchWebCalendar(webCalUrl);
+      return await this.processWebcalData(allEvents);
     } catch (error) {
       logger.error(
         "Dammit! Failed to fetch WebCal events",
@@ -195,12 +181,12 @@ export class WebCalCalendarService {
    * @param date Date to format
    * @returns Formatted date string
    */
-  private formatDateForCalDAV(date: Date): string {
-    return date
-      .toISOString()
-      .replace(/[-:]/g, "")
-      .replace(/\.\d{3}/, "");
-  }
+  // private formatDateForCalDAV(date: Date): string {
+  //   return date
+  //     .toISOString()
+  //     .replace(/[-:]/g, "")
+  //     .replace(/\.\d{3}/, "");
+  // }
 
   /**
    * Fetch master events from the Webcal data
@@ -210,26 +196,16 @@ export class WebCalCalendarService {
    * @param webCalUrl The webcal URL
    * @returns Array of master events
    */
-  private async fetchMasterEvents(
-    client: WebCalClient,
-    start: Date,
-    end: Date,
-    webCalUrl: string
-  ): Promise<CalendarEvent[]> {
-    // Create query parameters for master events
-    const queryParams = this.createWebCalQueryParams(
-      webCalUrl,
-      start,
-      end,
-      false // Don't use expand for master events
-    );
-
-    // Fetch webcal data
-    const webcalData = await client.calendarQuery(queryParams);
-
-    // Process the calendar objects to extract master events
-    return await this.processWebcalData(webcalData);
-  }
+  // private async fetchMasterEvents(
+  //   client: WebCalClient,
+  //   webCalUrl: string
+  // ): Promise<CalendarEvent[]> {
+  //   // Fetch webcal data
+  //   const webcalData = await client.fetchWebCalendar(webCalUrl);
+  //
+  //   // Process the calendar objects to extract master events
+  //   return await this.processWebcalData(webcalData);
+  // }
 
   /**
    * Create Webcal query parameters
@@ -239,49 +215,49 @@ export class WebCalCalendarService {
    * @param useExpand Whether to use the expand parameter
    * @returns Webcal query parameters
    */
-  private createWebCalQueryParams(
-    webCalUrl: string,
-    start: Date,
-    end: Date,
-    useExpand: boolean
-  ): CalendarQueryParams {
-    const props: Record<string, unknown> = {
-      "calendar-data": useExpand
-        ? {
-            expand: {
-              _attributes: {
-                start: this.formatDateForCalDAV(start),
-                end: this.formatDateForCalDAV(end),
-              },
-            },
-          }
-        : {}, // No expand for master events
-    };
-
-    return {
-      url: webCalUrl,
-      props,
-      filters: {
-        "comp-filter": {
-          _attributes: {
-            name: "VCALENDAR",
-          },
-          "comp-filter": {
-            _attributes: {
-              name: "VEVENT",
-            },
-            "time-range": {
-              _attributes: {
-                start: this.formatDateForCalDAV(start),
-                end: this.formatDateForCalDAV(end),
-              },
-            },
-          },
-        },
-      },
-      depth: "1",
-    };
-  }
+  // private createWebCalQueryParams(
+  //   webCalUrl: string,
+  //   start: Date,
+  //   end: Date,
+  //   useExpand: boolean
+  // ): CalendarQueryParams {
+  //   const props: Record<string, unknown> = {
+  //     "calendar-data": useExpand
+  //       ? {
+  //           expand: {
+  //             _attributes: {
+  //               start: start,
+  //               end: end,
+  //             },
+  //           },
+  //         }
+  //       : {}, // No expand for master events
+  //   };
+  //
+  //   return {
+  //     url: webCalUrl,
+  //     props,
+  //     filters: {
+  //       "comp-filter": {
+  //         _attributes: {
+  //           name: "VCALENDAR",
+  //         },
+  //         "comp-filter": {
+  //           _attributes: {
+  //             name: "VEVENT",
+  //           },
+  //           "time-range": {
+  //             _attributes: {
+  //               start: start.toString(),
+  //               end: end.toString(),
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //     depth: "1",
+  //   };
+  // }
 
   /**
    * Process calendar data from the ICS data
@@ -290,7 +266,7 @@ export class WebCalCalendarService {
    * @returns Array of calendar events
    */
   private async processWebcalData(
-    webCalResponse: NextResponse
+    webCalResponse: Response
   ): Promise<CalendarEvent[]> {
     const events: CalendarEvent[] = [];
     // Track UIDs to avoid duplicates
@@ -463,14 +439,10 @@ export class WebCalCalendarService {
       // const existingEvents = await this.getExistingEvents(feed.id);
 
       // Define time range for events (1 year back to 1 year ahead)
-      const timeRange = this.getTimeRange();
+      // const timeRange = this.getTimeRange();
 
       // Fetch events from webcal
-      const events = await this.getEvents(
-        timeRange.start,
-        timeRange.end,
-        webCalUrl
-      );
+      const events = await this.getEvents(webCalUrl);
 
       // Process events and update database
       // const result = await this.processEvents(events, existingEvents, feed.id);
@@ -504,13 +476,13 @@ export class WebCalCalendarService {
    * Define time range for events (1 year back to 1 year ahead)
    * @returns Object with start and end dates
    */
-  private getTimeRange(): { start: Date; end: Date } {
-    const now = newDate();
-    return {
-      start: newDateFromYMD(now.getFullYear() - 1, 0, 1), // 1 year ago, January 1st
-      end: newDateFromYMD(now.getFullYear() + 1, 11, 31), // End of next year
-    };
-  }
+  // private getTimeRange(): { start: Date; end: Date } {
+  //   const now = newDate();
+  //   return {
+  //     start: newDateFromYMD(now.getFullYear() - 1, 0, 1), // 1 year ago, January 1st
+  //     end: newDateFromYMD(now.getFullYear() + 1, 11, 31), // End of next year
+  //   };
+  // }
 
   private async createAllEvents(
     events: CalendarEvent[],

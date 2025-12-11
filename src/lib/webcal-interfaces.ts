@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-
+// import { NextResponse } from "next/server";
 import { CalendarEvent } from "@prisma/client";
 import ICAL from "ical.js";
 
@@ -21,34 +20,34 @@ export interface ICalRRule {
 
 // Futile attempt to create my own client?
 export interface WebCalClient {
-  fetchWebCalendar: () => Promise<CalendarEvent>;
-  calendarQuery: (params: CalendarQueryParams) => Promise<NextResponse>;
+  fetchWebCalendar: (webCalUrl: string) => Promise<Response>;
+  // calendarQuery: (params: CalendarQueryParams) => Promise<Response[]>;
 }
 
 // Define the structure for calendar query parameters
-export interface CalendarQueryParams {
-  url: string;
-  props: Record<string, unknown>;
-  filters: {
-    "comp-filter": {
-      _attributes: {
-        name: string;
-      };
-      "comp-filter": {
-        _attributes: {
-          name: string;
-        };
-        "time-range"?: {
-          _attributes: {
-            start: string;
-            end: string;
-          };
-        };
-      };
-    };
-  };
-  depth: string;
-}
+// export interface CalendarQueryParams {
+//   url: string;
+//   props: Record<string, unknown>;
+//   filters: {
+//     "comp-filter": {
+//       _attributes: {
+//         name: string;
+//       };
+//       "comp-filter": {
+//         _attributes: {
+//           name: string;
+//         };
+//         "time-range"?: {
+//           _attributes: {
+//             start: string;
+//             end: string;
+//           };
+//         };
+//       };
+//     };
+//   };
+//   depth: string;
+// }
 
 /**
  * Interface for Web calendar objects
