@@ -160,7 +160,7 @@ export class WebCalCalendarService {
       if (!client) return [];
 
       // Fetch master events (without expand)
-      const allEvents = await client.fetchWebCalInfo(webCalUrl);
+      const allEvents = await fetch(webCalUrl);
       return await this.processWebcalData(allEvents);
     } catch (error) {
       logger.error(
