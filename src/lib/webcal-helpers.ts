@@ -1,7 +1,6 @@
 import { CalendarEvent } from "@prisma/client";
 import ICAL from "ical.js";
 
-// import { ICalRRule } from "./webcal-interfaces";
 import { newDate } from "./date-utils";
 import { logger } from "./logger";
 

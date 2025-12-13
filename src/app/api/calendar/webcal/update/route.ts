@@ -79,14 +79,14 @@ export async function PUT(req: NextRequest) {
     }
 
     // Create CalDAV service
-    const webcalService = new WebCalCalendarService(feed);
+    const webCalService = new WebCalCalendarService(feed);
 
     // Sync calendar
     try {
-      await webcalService.syncCalendar(feed.id, feed.url, userId);
+      await webCalService.syncCalendar(feed.id, feed.url, userId);
     } catch (syncError) {
       logger.error(
-        "Failed to sync Webcal calendar",
+        "Failed to sync Web calendar",
         {
           error:
             syncError instanceof Error ? syncError.message : String(syncError),
@@ -96,7 +96,7 @@ export async function PUT(req: NextRequest) {
       );
       return NextResponse.json(
         {
-          error: "Failed to sync Webcal calendar",
+          error: "Failed to sync Web calendar",
           details:
             syncError instanceof Error ? syncError.message : String(syncError),
         },
@@ -113,7 +113,7 @@ export async function PUT(req: NextRequest) {
     });
 
     logger.info(
-      "Completed Webcal calendar sync",
+      "Completed Web calendar sync",
       {
         feedId: String(feedId),
       },
@@ -123,14 +123,14 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error(
-      "Failed to sync Webcal calendar",
+      "Failed to sync Web calendar",
       {
         error: error instanceof Error ? error.message : "Unknown error",
       },
       LOG_SOURCE
     );
     return NextResponse.json(
-      { error: "Failed to sync calendar" },
+      { error: "Failed to sync Web calendar" },
       { status: 500 }
     );
   }
@@ -151,9 +151,9 @@ export async function POST(request: NextRequest) {
     const userId = auth.userId;
 
     const body = await request.json();
-    const { webcalUrl, calendarId, name, color } = body;
+    const { webCalUrl, calendarId, name, color } = body;
 
-    if (!webcalUrl || !calendarId) {
+    if (!webCalUrl || !calendarId) {
       return NextResponse.json(
         { error: "URL and Calendar ID are required" },
         { status: 400 }
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     const existingFeed = await prisma.calendarFeed.findFirst({
       where: {
         type: "WEBCAL",
-        url: webcalUrl,
+        url: webCalUrl,
         id: calendarId,
         userId,
       },
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         type: "WEBCAL",
-        url: webcalUrl,
+        url: webCalUrl,
         color: color || "#BF616A",
         enabled: true,
         userId,
@@ -187,13 +187,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Sync events for this calendar
-    const webcalService = new WebCalCalendarService(feed);
+    const webCalService = new WebCalCalendarService(feed);
 
     try {
-      await webcalService.syncCalendar(feed.id, calendarId, userId);
+      await webCalService.syncCalendar(feed.id, calendarId, userId);
     } catch (syncError) {
       logger.error(
-        "Failed to perform initial sync of Webcal calendar",
+        "Failed to perform initial sync of Web calendar",
         {
           error:
             syncError instanceof Error ? syncError.message : String(syncError),
@@ -207,14 +207,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(feed);
   } catch (error) {
     logger.error(
-      "Failed to add Webcal calendar",
+      "Failed to add Web calendar",
       {
         error: error instanceof Error ? error.message : "Unknown error",
       },
       LOG_SOURCE
     );
     return NextResponse.json(
-      { error: "Failed to add calendar" },
+      { error: "Failed to add Web calendar" },
       { status: 500 }
     );
   }
