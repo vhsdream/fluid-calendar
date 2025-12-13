@@ -60,8 +60,14 @@ export async function POST(request: NextRequest) {
       }
 
       // Parse webcal for the Calendar name
-      const webCalParsed: string[] = webCal.webCalText.split(/[\r\n:]+/, 8);
-      const webCalName: string = webCalParsed[7];
+      const webCalLines: string[] = webCal.webCalText.split(/\n]+/, 6);
+      let webCalName: string = "";
+      for (const line of webCalLines) {
+        if (line.toLowerCase().startsWith("x-wr-calname:")) {
+          webCalName = line.substring(14).trim();
+        }
+        webCalName = "Unnamed Webcalendar";
+      }
 
       const existingWebCal = await prisma.calendarFeed.findFirst({
         where: {
