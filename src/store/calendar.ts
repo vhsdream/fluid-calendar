@@ -674,7 +674,7 @@ export const useCalendarStore = create<CalendarStore>()((set, get) => ({
           throw new Error("Failed to sync CalDAV Calendar");
         }
       } else if (feed.type === "WEBCAL") {
-        const response = await fetch("/api/webcal/update", {
+        const response = await fetch("/api/calendar/webcal/update", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ feedId: id }),
