@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       const webCalLines: string[] = webCal.webCalText.split(/\n]+/, 6);
       let webCalName: string = "";
       for (const line of webCalLines) {
-        if (line.startsWith("x-wr-calname:")) {
+        if (line.toLowerCase().startsWith("x-wr-calname:")) {
           webCalName = line.substring(14).trim();
         }
         // webCalName = "Unnamed Webcalendar";
