@@ -19,7 +19,7 @@ export interface ICalRRule {
 
 // Futile attempt to create my own client?
 export interface WebCalClient {
-  fetchWebCalInfo: (webCalUrl: string) => Promise<Response>;
+  fetchWebCalInfo: (webCalUrl: string) => Promise<Response[]>;
 }
 
 /**

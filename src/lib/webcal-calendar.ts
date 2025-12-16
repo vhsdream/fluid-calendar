@@ -72,7 +72,7 @@ export class WebCalCalendarService {
       if (!client) return [];
 
       // Fetch master events (without expand)
-      const allEvents = await fetch(webCalUrl);
+      const allEvents = await client.fetchWebCalInfo(webCalUrl);
       return await this.processWebcalData(allEvents);
     } catch (error) {
       logger.error(
@@ -95,18 +95,18 @@ export class WebCalCalendarService {
    * @returns Array of calendar events
    */
   private async processWebcalData(
-    webCalResponse: Response
+    webCalResponse: Response[]
   ): Promise<CalendarEvent[]> {
     const events: CalendarEvent[] = [];
     // Track UIDs to avoid duplicates
     const processedUids = new Set<string>();
 
     // Convert Response object to String
-    const webCalData = await webCalResponse.text();
+    const webCalData = webCalResponse.toString();
 
     try {
       // Parse the iCalendar data
-      const vevents = this.parseICalData(webCalData, webCalResponse.url);
+      const vevents = this.parseICalData(webCalData);
       // if (!vevents || vevents.length === 0) continue;
 
       // Process each VEVENT component
@@ -133,7 +133,7 @@ export class WebCalCalendarService {
         "Failed to process webcal data",
         {
           error: error instanceof Error ? error.message : "Unknown error",
-          url: webCalResponse.url || "unknown",
+          // url: webCalResponse.url || "unknown",
         },
         LOG_SOURCE
       );
@@ -148,8 +148,8 @@ export class WebCalCalendarService {
    * @returns Array of VEVENT components
    */
   private parseICalData(
-    webCalData: string,
-    webCalUrl: string
+    webCalData: string
+    // webCalUrl: string
   ): ICAL.Component[] | null {
     try {
       const jcalData = ICAL.parse(webCalData);
@@ -161,7 +161,7 @@ export class WebCalCalendarService {
         "Failed to parse iCalendar data",
         {
           error: error instanceof Error ? error.message : "Unknown error",
-          webCalUrl,
+          // webCalUrl,
         },
         LOG_SOURCE
       );
