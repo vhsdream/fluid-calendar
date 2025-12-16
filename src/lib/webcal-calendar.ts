@@ -222,7 +222,7 @@ export class WebCalCalendarService {
         "Failed to sync Webcal calendar",
         {
           error: error instanceof Error ? error.message : "Unknown error",
-          webCalUrl,
+          webCalUrl: this.feed.url,
           accountId: this.feed.accountId,
         },
         LOG_SOURCE

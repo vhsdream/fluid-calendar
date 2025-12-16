@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
           throw new Error(`Calendar feed not found for WebCal: ${webCalUrl}`);
         }
 
-        // Process events and update database - currently BROKEN
+        // Process events and update database
         const webCalService = new WebCalCalendarService(feed);
         await webCalService.syncCalendar(newWebCalendar.id, webCalUrl, userId);
 
