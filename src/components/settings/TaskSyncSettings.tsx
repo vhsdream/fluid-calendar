@@ -669,11 +669,11 @@ export function TaskSyncSettings() {
                 <div className="font-medium">
                   {selectedProvider.lastSyncedAt
                     ? format(
-                        typeof selectedProvider.lastSyncedAt === "string"
-                          ? new Date(selectedProvider.lastSyncedAt)
-                          : selectedProvider.lastSyncedAt,
-                        "PPp"
-                      )
+                      typeof selectedProvider.lastSyncedAt === "string"
+                        ? new Date(selectedProvider.lastSyncedAt)
+                        : selectedProvider.lastSyncedAt,
+                      "PPp"
+                    )
                     : "Never"}
                 </div>
               </div>
@@ -735,7 +735,7 @@ export function TaskSyncSettings() {
     return (
       <SettingRow
         label="Task Lists"
-        description="Map external task lists to FluidCalendar projects"
+        description="Map external task lists to NordiCal projects"
       >
         <div className="space-y-4">
           {error && (

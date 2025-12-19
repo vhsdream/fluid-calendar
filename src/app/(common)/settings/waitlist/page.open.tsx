@@ -26,7 +26,7 @@ export default function WaitlistPage() {
           <div className="ml-3">
             <p className="text-sm text-yellow-700">
               <strong>SAAS Feature Only:</strong> The Beta Waitlist Management
-              feature is only available in the SAAS version of FluidCalendar.
+              feature is only available in the SAAS version of NordiCal.
             </p>
           </div>
         </div>

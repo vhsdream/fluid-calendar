@@ -912,7 +912,7 @@ export class CalDAVCalendarService {
   private convertToICalendar(event: CalendarEventInput): string {
     // Create a new iCalendar component
     const calendar = new ICAL.Component(["vcalendar", [], []]);
-    calendar.updatePropertyWithValue("prodid", "-//FluidCalendar//EN");
+    calendar.updatePropertyWithValue("prodid", "-//NordiCal//EN");
     calendar.updatePropertyWithValue("version", "2.0");
 
     // Create the event component
