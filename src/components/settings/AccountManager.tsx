@@ -19,6 +19,7 @@ import { useSettingsStore } from "@/store/settings";
 
 import { AvailableCalendars } from "./AvailableCalendars";
 import { CalDAVAccountForm } from "./CalDAVAccountForm";
+import { AddWebCalForm } from "./AddWebCalForm";
 
 const LOG_SOURCE = "AccountManager";
 
@@ -31,6 +32,7 @@ export function AccountManager() {
   const { accounts, refreshAccounts, removeAccount } = useSettingsStore();
   const [showAvailableFor, setShowAvailableFor] = useState<string | null>(null);
   const [showCalDAVForm, setShowCalDAVForm] = useState(false);
+  const [showWebCalForm, setShowWebCalForm] = useState(false);
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus>(
     {
       google: { configured: false },
@@ -87,14 +89,17 @@ export function AccountManager() {
     setShowCalDAVForm(false);
     refreshAccounts();
   };
+  const handleWebCalSuccess = () => {
+    setShowWebCalForm(false);
+  };
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Connected Accounts</CardTitle>
+          <CardTitle>Connected Accounts & Subscriptions</CardTitle>
           <CardDescription>
-            Manage your connected calendar accounts
+            Manage your connected calendar accounts and WebCal subscriptions
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -136,6 +141,9 @@ export function AccountManager() {
             <Button onClick={() => setShowCalDAVForm(true)} variant="outline">
               Connect CalDAV Calendar
             </Button>
+            <Button onClick={() => setShowWebCalForm(true)} variant="outline">
+              Subscribe to Web Calendar
+            </Button>
           </div>
 
           {showCalDAVForm && (
@@ -144,6 +152,17 @@ export function AccountManager() {
                 <CalDAVAccountForm
                   onSuccess={handleCalDAVSuccess}
                   onCancel={() => setShowCalDAVForm(false)}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {showWebCalForm && (
+            <Card>
+              <CardContent className="pt-6">
+                <AddWebCalForm
+                  onSuccess={handleWebCalSuccess}
+                  onCancel={() => setShowWebCalForm(false)}
                 />
               </CardContent>
             </Card>
@@ -207,6 +226,8 @@ export function AccountManager() {
                 )}
               </div>
             ))}
+          </div>
+          <div className="space-y-4">
           </div>
         </CardContent>
       </Card>

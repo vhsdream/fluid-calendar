@@ -38,7 +38,7 @@ export async function getEvent(
     recurringEventId: event.recurringEventId || undefined,
     feed: {
       ...event.feed,
-      type: event.feed.type as "GOOGLE" | "OUTLOOK" | "CALDAV",
+      type: event.feed.type as "GOOGLE" | "OUTLOOK" | "CALDAV" | "WEBCAL",
       url: event.feed.url || undefined,
       color: event.feed.color || undefined,
       lastSync: event.feed.lastSync || undefined,
@@ -53,7 +53,7 @@ export async function getEvent(
 
 export async function validateEvent(
   event: CalendarEventWithFeed | null,
-  provider: "GOOGLE" | "OUTLOOK" | "CALDAV"
+  provider: "GOOGLE" | "OUTLOOK" | "CALDAV" | "WEBCAL"
 ): Promise<ValidatedEvent | NextResponse> {
   if (!event || !event.feed || !event.feed.accountId) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });

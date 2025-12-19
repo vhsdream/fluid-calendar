@@ -88,7 +88,7 @@ interface CalendarStore extends CalendarState {
   addFeed: (
     name: string,
     url: string,
-    type: "GOOGLE" | "OUTLOOK" | "CALDAV",
+    type: "GOOGLE" | "OUTLOOK" | "CALDAV" | "WEBCAL",
     color?: string
   ) => Promise<void>;
   removeFeed: (id: string) => Promise<void>;
@@ -673,6 +673,16 @@ export const useCalendarStore = create<CalendarStore>()((set, get) => ({
         if (!response.ok) {
           throw new Error("Failed to sync CalDAV Calendar");
         }
+      } else if (feed.type === "WEBCAL") {
+        const response = await fetch("/api/calendar/webcal/update", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ feedId: id }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update Web Calendar subscription");
+        }
       }
 
       // Reload events from database
@@ -784,7 +794,9 @@ export const useCalendarStore = create<CalendarStore>()((set, get) => ({
           ? `/api/calendar/google/${feedId}`
           : feed.type === "CALDAV"
             ? `/api/calendar/caldav/sync`
-            : `/api/calendar/outlook/sync`;
+            : feed.type === "WEBCAL"
+              ? `/api/calendar/webcal/update`
+              : `/api/calendar/outlook/sync`;
 
       const response = await fetch(endpoint, {
         method: "PUT",
