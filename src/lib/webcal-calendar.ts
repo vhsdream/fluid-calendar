@@ -42,7 +42,6 @@ export class WebCalCalendarService {
       // Use type assertion to tell TypeScript this is our extended client type
       this.client = {
         url: this.feed.url,
-        id: this.feed.id,
       } as unknown as WebCalClient;
 
       return this.client;
@@ -72,7 +71,7 @@ export class WebCalCalendarService {
       if (!client) return [];
 
       // Fetch master events (without expand)
-      const allEvents = await client.fetchWebCalInfo();
+      const allEvents = await this.fetchWebCalData(client, webCalUrl);
       return await this.processWebcalData(allEvents);
     } catch (error) {
       logger.error(
@@ -86,6 +85,20 @@ export class WebCalCalendarService {
       );
       return [];
     }
+  }
+
+  /**
+   * Fetch Webcal data from URL
+   * @param client WebCal client
+   * @param webCalUrl The URL
+   * @returns Array of calendar events maybe?
+   */
+  private async fetchWebCalData(
+    client: WebCalClient,
+    webCalUrl: string
+  ): Promise<Response[]> {
+    const webCalData = await client.fetchWebCalInfo(webCalUrl);
+    return webCalData;
   }
 
   /**
