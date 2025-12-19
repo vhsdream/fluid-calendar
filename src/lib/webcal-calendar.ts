@@ -71,7 +71,7 @@ export class WebCalCalendarService {
       if (!client) return [];
 
       // Fetch master events (without expand)
-      const allEvents = await this.fetchWebCalData(client, webCalUrl);
+      const allEvents = await this.fetchWebCalData(webCalUrl);
       return await this.processWebcalData(allEvents);
     } catch (error) {
       logger.error(
@@ -94,10 +94,10 @@ export class WebCalCalendarService {
    * @returns Array of calendar events maybe?
    */
   private async fetchWebCalData(
-    client: WebCalClient,
+    // client: WebCalClient,
     webCalUrl: string
-  ): Promise<CalendarEvent[]> {
-    const webCalData = await client.fetchWebCalInfo(webCalUrl);
+  ): Promise<Response> {
+    const webCalData = await fetch(webCalUrl);
     return webCalData;
   }
 
@@ -108,14 +108,14 @@ export class WebCalCalendarService {
    * @returns Array of calendar events
    */
   private async processWebcalData(
-    webCalResponse: CalendarEvent[]
+    webCalResponse: Response
   ): Promise<CalendarEvent[]> {
     const events: CalendarEvent[] = [];
     // Track UIDs to avoid duplicates
     const processedUids = new Set<string>();
 
     // Convert Response object to String
-    const webCalData = webCalResponse.toString();
+    const webCalData = await webCalResponse.text();
 
     try {
       // Parse the iCalendar data
