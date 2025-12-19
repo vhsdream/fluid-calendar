@@ -96,7 +96,7 @@ export class WebCalCalendarService {
   private async fetchWebCalData(
     client: WebCalClient,
     webCalUrl: string
-  ): Promise<Response> {
+  ): Promise<CalendarEvent[]> {
     const webCalData = await client.fetchWebCalInfo(webCalUrl);
     return webCalData;
   }
@@ -108,7 +108,7 @@ export class WebCalCalendarService {
    * @returns Array of calendar events
    */
   private async processWebcalData(
-    webCalResponse: Response
+    webCalResponse: CalendarEvent[]
   ): Promise<CalendarEvent[]> {
     const events: CalendarEvent[] = [];
     // Track UIDs to avoid duplicates
